@@ -6,8 +6,14 @@
     <static>false</static>
     <allow_auto_disable>false</allow_auto_disable>
     
+    <!-- Add fixed joint between world and base_link -->
+    <joint name="world_base_joint" type="fixed">
+      <parent>world</parent>
+      <child>base_link</child>
+      <pose>0 0 0 0 0 0</pose>
+    </joint>
+    
     <link name="base_link">
-      <gz_frame_id>donkey/base_link</gz_frame_id>
       <inertial>
         <pose >0 0 0 0 0 0</pose>
         <mass>3.0</mass>
@@ -64,7 +70,6 @@
       <sensor name="imu_sensor" type="imu">
         <always_on>1</always_on>
         <update_rate>50</update_rate>
-        <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
         <topic>imu</topic>
         <imu>
           <enable_orientation>0</enable_orientation>
@@ -168,7 +173,6 @@
             <stddev>0.01</stddev>
           </noise>
         </lidar>
-        <gz_frame_id>donkey/base_link</gz_frame_id>
         <topic>scan</topic>
         <visualize>true</visualize>
         <update_rate>10</update_rate>
@@ -221,9 +225,9 @@
             <stddev>0.007</stddev>
           </noise>
         </camera>
-        <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
-        <topic>rs_front</topic>
+        <topic>real_sense</topic>
         <visualize>true</visualize>
+        <frame_id>donkey</frame_id>
       </sensor>
 
        <sensor name="camera_front" type="camera">
@@ -268,7 +272,6 @@
              <stddev>0.007</stddev>
            </noise>
          </camera>
-        <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
         <topic>camera_front</topic>
         <visualize>true</visualize>
        </sensor>
@@ -314,7 +317,6 @@
              <stddev>0.007</stddev>
            </noise>
          </camera>
-         <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
          <topic>camera_rear</topic>
          <visualize>true</visualize>
        </sensor>
@@ -323,7 +325,6 @@
          <pose>0.085 0.09 0.27 0 0 1.5707963267948966</pose>
          <always_on>1</always_on>
          <update_rate>10</update_rate>
-        <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
          <camera name="camera_left">
            <horizontal_fov>1.658</horizontal_fov>
            <lens>
@@ -361,7 +362,6 @@
              <stddev>0.007</stddev>
            </noise>
          </camera>
-         <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
          <topic>camera_left</topic>
          <visualize>true</visualize>
        </sensor>
@@ -370,7 +370,6 @@
          <pose>0.085 -0.09 0.27 0 0 -1.5707963267948966</pose>
          <always_on>1</always_on>
          <update_rate>10</update_rate>
-         <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
          <camera name="camera_right">
            <horizontal_fov>1.658</horizontal_fov>
            <lens>
@@ -408,7 +407,6 @@
              <stddev>0.007</stddev>
            </noise>
          </camera>
-         <!-- <gz_frame_id>donkey/base_link</gz_frame_id> -->
          <topic>camera_right</topic>
          <visualize>true</visualize>
        </sensor>
@@ -732,8 +730,12 @@
       name="gz::sim::systems::PosePublisher">
       <publish_link_pose>true</publish_link_pose>
       <publish_sensor_pose>true</publish_sensor_pose>
-      <publish_model_pose>false</publish_model_pose>
+      <publish_model_pose>true</publish_model_pose>
       <use_pose_vector_msg>true</use_pose_vector_msg>
+      <static_publisher>true</static_publisher>
+      <publish_tf>true</publish_tf>
+      <static_tf_topic>tf_static</static_tf_topic>
+      <static_update_frequency>1</static_update_frequency>
     </plugin>
     
     <!-- Add odometry publisher plugin -->

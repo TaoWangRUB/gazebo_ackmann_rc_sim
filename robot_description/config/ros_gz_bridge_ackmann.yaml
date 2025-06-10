@@ -13,7 +13,7 @@
   lazy: false
   
 - ros_topic_name: "/odom"
-  gz_topic_name: "/model/base_link/odometry_with_covariance"
+  gz_topic_name: "/model/donkey/odometry_with_covariance"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.OdometryWithCovariance"
   direction: GZ_TO_ROS
@@ -25,13 +25,13 @@
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/tf"
-  gz_topic_name: "/model/base_link/pose"
+  gz_topic_name: "/model/donkey/pose"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/tf_static"
-  gz_topic_name: "/model/base_link/pose_static"
+  gz_topic_name: "/model/donkey/pose_static"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
@@ -66,18 +66,26 @@
 #   gz_type_name: "gz.msgs.Image"
 #   direction: GZ_TO_ROS
 
-# - ros_topic_name: "/real_sense/image_raw"
-#   gz_topic_name: "/rs_front/image"
-#   ros_type_name: "sensor_msgs/msg/Image"
-#   gz_type_name: "gz.msgs.Image"
-#   direction: GZ_TO_ROS
-# - ros_topic_name: "real_sense/depth_image"
-#   gz_topic_name: "/rs_front/depth_image"
-#   ros_type_name: "sensor_msgs/msg/Image"
-#   gz_type_name: "gz.msgs.Image"
-#   direction: GZ_TO_ROS
-# - ros_topic_name: "real_sense/depth_point"
-#   gz_topic_name: "/rs_front/points"
-#   ros_type_name: "sensor_msgs/msg/PointCloud2"
-#   gz_type_name: "gz.msgs.PointCloudPacked"
-#   direction: GZ_TO_ROS
+- ros_topic_name: "/real_sense/image_raw"
+  gz_topic_name: "/real_sense/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "real_sense/depth_image"
+  gz_topic_name: "/real_sense/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "real_sense/depth_point"
+  gz_topic_name: "/real_sense/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS
+  
+- ros_topic_name: "real_sense/camera_info"
+  gz_topic_name: "/real_sense/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
