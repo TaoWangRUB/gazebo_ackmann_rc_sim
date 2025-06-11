@@ -62,6 +62,8 @@ def generate_launch_description():
         executable='parameter_bridge',
         parameters=[{
             'config_file': os.path.join(pkg_rc_gz_sim, 'config', 'ros_gz_bridge_ackmann.yaml'),
+            'qos_overrides./tf_static.publisher.durability': 'transient_local',
+            'qos_overrides./tf_static.subscription.durability': 'transient_local',
         }],
         output='screen'
     )

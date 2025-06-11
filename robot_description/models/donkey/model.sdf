@@ -5,14 +5,7 @@
     <self_collide>false</self_collide>
     <static>false</static>
     <allow_auto_disable>false</allow_auto_disable>
-    
-    <!-- Add fixed joint between world and base_link -->
-    <joint name="world_base_joint" type="fixed">
-      <parent>world</parent>
-      <child>base_link</child>
-      <pose>0 0 0 0 0 0</pose>
-    </joint>
-    
+
     <link name="base_link">
       <inertial>
         <pose >0 0 0 0 0 0</pose>
@@ -56,14 +49,6 @@
           <mesh>
            <uri>meshes/STL27L.dae</uri>
           </mesh>
-        </geometry>
-      </visual>
-      <visual name="donkey/camera_rack">
-        <pose>0 0 .184 0 0 0</pose> 
-        <geometry>
-          <box>
-            <size>0.03 0.03 0.03</size>
-          </box>
         </geometry>
       </visual>
 
@@ -177,12 +162,38 @@
         <visualize>true</visualize>
         <update_rate>10</update_rate>
       </sensor>
+    </link>
+
+    <link name = "camera_link">
+      <pose relative_to="camera_joint">0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <iyy>0.0001</iyy>
+          <izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <visual name="donkey/camera_rack">
+        <geometry>
+          <box>
+            <size>0.03 0.03 0.03</size>
+          </box>
+        </geometry>
+      </visual>
+      <collision name="camera_link/collision">
+        <geometry>
+          <box>
+            <size>0.03 0.03 0.03</size>
+          </box>
+        </geometry> 
+      </collision>
 
       <sensor name="rs_front" type="rgbd_camera">
         <pose>0.122 0 0.257 0 0 0</pose>
         <always_on>1</always_on>
         <update_rate>10</update_rate>
-        <camera name="rs_front">
+        <camera>
           <horizontal_fov>1.50098</horizontal_fov>
           <lens>
             <intrinsics>
@@ -205,8 +216,8 @@
             <center>0.5 0.5</center>
           </distortion>
           <image>
-            <width>640</width>
-            <height>360</height>
+            <width>480</width>
+            <height>320</height>
             <format>R8G8B8</format>
           </image>
           <clip>
@@ -227,191 +238,27 @@
         </camera>
         <topic>real_sense</topic>
         <visualize>true</visualize>
-        <frame_id>donkey</frame_id>
+        <frame_id>camera_link</frame_id>
       </sensor>
-
-       <sensor name="camera_front" type="camera">
-         <pose>0.111 0.03 0.235 0 0 0</pose>
-         <always_on>1</always_on>
-         <update_rate>10</update_rate>
-         <!-- <topic>camera_front<topic> -->
-         <camera name="camera_front">
-           <horizontal_fov>1.658</horizontal_fov>
-           <lens>
-             <intrinsics>
-               <!-- fx = fy = width / ( 2 * tan (hfov / 2 ) ) -->
-               <fx>329.9</fx>
-               <fy>329.9</fy>
-               <!-- cx = ( width - 1 ) / 2 -->
-               <cx>359.5</cx>
-               <!-- cy = ( height - 1 ) / 2 -->
-               <cy>539.5</cy>
-               <s>0</s>
-             </intrinsics>
-           </lens>
-           <distortion>
-             <k1>0.0</k1>
-             <k2>0.0</k2>
-             <k3>0.0</k3>
-             <p1>0.0</p1>
-             <p2>0.0</p2>
-             <center>0.5 0.5</center>
-           </distortion>
-           <image>
-             <width>720</width>
-             <height>1080</height>
-             <format>R8G8B8</format>
-           </image>
-           <clip>
-             <near>0.01</near>
-             <far>300</far>
-           </clip>
-           <noise>
-             <type>gaussian</type>
-             <mean>0</mean>
-             <stddev>0.007</stddev>
-           </noise>
-         </camera>
-        <topic>camera_front</topic>
-        <visualize>true</visualize>
-       </sensor>
-
-       <sensor name="camera_rear" type="camera">
-         <pose>0.069 -0.03 0.235 0 0 3.141592653589793</pose>
-         <always_on>1</always_on>
-         <update_rate>10</update_rate>
-         <camera name="camera_rear">
-           <horizontal_fov>1.658</horizontal_fov>
-           <lens>
-             <intrinsics>
-               <!-- fx = fy = width / ( 2 * tan (hfov / 2 ) ) -->
-               <fx>329.9</fx>
-               <fy>329.9</fy>
-               <!-- cx = ( width - 1 ) / 2 -->
-               <cx>359.5</cx>
-               <!-- cy = ( height - 1 ) / 2 -->
-               <cy>539.5</cy>
-               <s>0</s>
-             </intrinsics>
-           </lens>
-           <distortion>
-             <k1>0.0</k1>
-             <k2>0.0</k2>
-             <k3>0.0</k3>
-             <p1>0.0</p1>
-             <p2>0.0</p2>
-             <center>0.5 0.5</center>
-           </distortion>
-           <image>
-             <width>720</width>
-             <height>1080</height>
-             <format>R8G8B8</format>
-           </image>
-           <clip>
-             <near>0.01</near>
-             <far>300</far>
-           </clip>
-           <noise>
-             <type>gaussian</type>
-             <mean>0</mean>
-             <stddev>0.007</stddev>
-           </noise>
-         </camera>
-         <topic>camera_rear</topic>
-         <visualize>true</visualize>
-       </sensor>
-
-       <sensor name="camera_left" type="camera">
-         <pose>0.085 0.09 0.27 0 0 1.5707963267948966</pose>
-         <always_on>1</always_on>
-         <update_rate>10</update_rate>
-         <camera name="camera_left">
-           <horizontal_fov>1.658</horizontal_fov>
-           <lens>
-             <intrinsics>
-               <!-- fx = fy = width / ( 2 * tan (hfov / 2 ) ) -->
-               <fx>329.9</fx>
-               <fy>329.9</fy>
-               <!-- cx = ( width - 1 ) / 2 -->
-               <cx>359.5</cx>
-               <!-- cy = ( height - 1 ) / 2 -->
-               <cy>539.5</cy>
-               <s>0</s>
-             </intrinsics>
-           </lens>
-           <distortion>
-             <k1>0.0</k1>
-             <k2>0.0</k2>
-             <k3>0.0</k3>
-             <p1>0.0</p1>
-             <p2>0.0</p2>
-             <center>0.5 0.5</center>
-           </distortion>
-           <image>
-             <width>720</width>
-             <height>1080</height>
-             <format>R8G8B8</format>
-           </image>
-           <clip>
-             <near>0.01</near>
-             <far>300</far>
-           </clip>
-           <noise>
-             <type>gaussian</type>
-             <mean>0</mean>
-             <stddev>0.007</stddev>
-           </noise>
-         </camera>
-         <topic>camera_left</topic>
-         <visualize>true</visualize>
-       </sensor>
-
-       <sensor name="camera_right" type="camera">
-         <pose>0.085 -0.09 0.27 0 0 -1.5707963267948966</pose>
-         <always_on>1</always_on>
-         <update_rate>10</update_rate>
-         <camera name="camera_right">
-           <horizontal_fov>1.658</horizontal_fov>
-           <lens>
-             <intrinsics>
-               <!-- fx = fy = width / ( 2 * tan (hfov / 2 ) ) -->
-               <fx>329.9</fx>
-               <fy>329.9</fy>
-               <!-- cx = ( width - 1 ) / 2 -->
-               <cx>359.5</cx>
-               <!-- cy = ( height - 1 ) / 2 -->
-               <cy>539.5</cy>
-               <s>0</s>
-             </intrinsics>
-           </lens>
-           <distortion>
-             <k1>0.0</k1>
-             <k2>0.0</k2>
-             <k3>0.0</k3>
-             <p1>0.0</p1>
-             <p2>0.0</p2>
-             <center>0.5 0.5</center>
-           </distortion>
-           <image>
-             <width>720</width>
-             <height>1080</height>
-             <format>R8G8B8</format>
-           </image>
-           <clip>
-             <near>0.01</near>
-             <far>300</far>
-           </clip>
-           <noise>
-             <type>gaussian</type>
-             <mean>0</mean>
-             <stddev>0.007</stddev>
-           </noise>
-         </camera>
-         <topic>camera_right</topic>
-         <visualize>true</visualize>
-       </sensor>
     </link>
 
+    <joint name="camera_joint" type="fixed">
+      <pose relative_to="base_link">0 0 0.184 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>camera_link</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
     <link name="front_left_wheel_link">
       <pose relative_to="front_left_wheel_joint">0 0 0 0 0 0</pose>
       <inertial>
