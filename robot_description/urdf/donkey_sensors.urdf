@@ -256,16 +256,69 @@
   <xacro:arg name="use_nominal_extrinsics" default="true" />
   <xacro:arg name="add_plug" default="false" />
   <xacro:arg name="use_mesh" default="true" />
-  <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i.urdf.xacro"/>
+  <xacro:property name="d435_name" value="d435i" />
+  <xacro:property name="l515_name" value="l515" />
 
-  <xacro:sensor_d435i name="d435i" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
+  <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i.urdf.xacro"/>
+  <xacro:sensor_d435i name="${d435_name}" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
     <origin xyz="0.1 0 0.184" rpy="0 0 0"/>
   </xacro:sensor_d435i>
 
   <xacro:include filename="$(find robot_description)/urdf/realsense/_l515.urdf.xacro" />
-  <xacro:sensor_l515 name="l515" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" add_plug="$(arg add_plug)" use_mesh="$(arg use_mesh)">
+  <xacro:sensor_l515 name="${l515_name}" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" add_plug="$(arg add_plug)" use_mesh="$(arg use_mesh)">
     <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
   </xacro:sensor_l515>
+
+  <!-- <gazebo reference="$(arg ns)/${l515_name}_depth_frame"> -->
+  <gazebo reference="${l515_name}_depth_optical_frame">
+    <sensor name="rgbd_camera" type="rgbd_camera">
+      <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id>
+      <camera name="${l515_name}">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <lens>
+          <intrinsics>
+            <fx>277.1</fx>
+            <fy>277.1</fy>
+            <cx>160.5</cx>
+            <cy>120.5</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+        <distortion>
+          <k1>0.104207</k1>
+          <k2>-0.255558</k2>
+          <k3>0.128694</k3>
+          <p1>0.000512</p1>
+          <p2>0.000319</p2>
+          <center>0.5 0.5</center>
+        </distortion>
+        <image>
+          <width>480</width>
+          <height>320</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.01</near>
+          <far>300</far>
+        </clip>
+        <depth_camera>
+          <clip>
+            <near>0.1</near>
+            <far>10</far>
+          </clip>
+        </depth_camera>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.003</stddev>
+        </noise>
+      </camera>
+      <always_on>1</always_on>
+      <update_rate>10</update_rate>
+      <visualize>1</visualize>
+      <topic>$(arg ns)/depth_camera</topic>
+    </sensor>
+  </gazebo>
 
   <gazebo>
     <plugin
