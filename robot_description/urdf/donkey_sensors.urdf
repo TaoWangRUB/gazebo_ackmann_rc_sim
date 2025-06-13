@@ -13,11 +13,10 @@
   <xacro:arg name="base_color"    default="1.0 0.0 0.0 1.0"/>
   <xacro:arg name="ns"    default="ackmann"/>
   
-  <!-- Custom color (for Ign and RViz) -->
+  <!-- Custom color (for Gz and RViz) -->
   <material name="gray">
     <color rgba="0.4 0.4 0.4 1.0"/>
   </material>
-  
   
   <link name="$(arg ns)/base_footprint"/>
 
@@ -52,7 +51,6 @@
                izz="0.0252"/>
     </inertial>
   </link>
-
 
   <!-- Wheels definition (joints and links) -->
   <joint name="$(arg ns)/front_left_wheel_joint" type="continuous">
@@ -252,6 +250,22 @@
         </surface>
       </collision>
   </link>
+
+  <!-- SENSORS -->
+  <!-- RGBD CAMERA -->
+  <xacro:arg name="use_nominal_extrinsics" default="true" />
+  <xacro:arg name="add_plug" default="false" />
+  <xacro:arg name="use_mesh" default="true" />
+  <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i.urdf.xacro"/>
+
+  <xacro:sensor_d435i name="d435i" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
+    <origin xyz="0.1 0 0.184" rpy="0 0 0"/>
+  </xacro:sensor_d435i>
+
+  <xacro:include filename="$(find robot_description)/urdf/realsense/_l515.urdf.xacro" />
+  <xacro:sensor_l515 name="l515" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" add_plug="$(arg add_plug)" use_mesh="$(arg use_mesh)">
+    <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
+  </xacro:sensor_l515>
 
   <gazebo>
     <plugin
