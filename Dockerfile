@@ -7,22 +7,32 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     curl \
     locales \
-    sudo
-    
+    sudo 
+
 # 2. Add Gazebo repository
 RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/gazebo-archive-keyring.gpg && \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gazebo-archive-keyring.gpg] \
     http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" \
     > /etc/apt/sources.list.d/gazebo-stable.list
 
-# 3. Install Gazebo Harmonic
-RUN sudo apt-get update && \
-    sudo apt-get install -y \
-    gz-harmonic \
-    ros-humble-ros-gzharmonic \
+# 3. Install TurtleBot3 and others
+RUN apt-get update && \
+    apt-get purge -y ros-humble-ros-gz* && \
+    apt-get install -y \
+    #ros-humble-turtlebot3* \
+    ros-humble-turtlebot4-simulator ros-humble-irobot-create-nodes \
+    ros-humble-realsense2* \
+    ros-humble-rtabmap \
+    ros-humble-rtabmap-ros \
     ros-humble-rmw-cyclonedds-cpp && \
-    sudo rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
-# 4. Set up environment
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-RUN echo "source /usr/share/gz/gz-sim/setup.sh" >> ~/.bashrc
+# 4. Workspace
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/bin/bash"]
+

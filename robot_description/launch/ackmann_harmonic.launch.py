@@ -103,7 +103,7 @@ def generate_launch_description():
             '/'+robot_ns+'/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
             '/'+robot_ns+'/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
             '/'+robot_ns+'/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
-            #'/'+robot_ns+'/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/'+robot_ns+'/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
             '/model/'+robot_ns+'/battery/linear_battery/state@sensor_msgs/msg/BatteryState@gz.msgs.BatteryState',
             '/'+robot_ns+'/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
         ],

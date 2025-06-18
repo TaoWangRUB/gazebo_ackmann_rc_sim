@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="ackmann_robot" xmlns:xacro="http://ros.org/wiki/xacro"> 
+<robot name="ackmann" xmlns:xacro="http://ros.org/wiki/xacro"> 
   
   <xacro:property name="package_name" value="rebot_description"/>
   <xacro:property name="PI" value="3.14159265"/>
@@ -18,6 +18,26 @@
     <color rgba="0.4 0.4 0.4 1.0"/>
   </material>
   
+    <xacro:macro name="inertial_cuboid_with_pose" params="mass x y z *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin"/>
+      <inertia ixx="${(1/12) * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${(1/12) * mass * (x*x + y*y)}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_cuboid" params="mass x y z">
+    <xacro:inertial_cuboid_with_pose mass="${mass}" x="${x}" y="${y}" z="${z}">
+      <origin xyz="0 0 0" />
+    </xacro:inertial_cuboid_with_pose>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_dummy">
+    <xacro:inertial_cuboid mass="0.01" x="0.01" y="0.01" z="0.01"/>
+  </xacro:macro>
+
   <link name="$(arg ns)/base_footprint"/>
 
   <joint name="$(arg ns)/base_joint" type="fixed">
@@ -94,7 +114,6 @@
         </geometry>
       </visual>
       <collision name="front_left_wheel_collision">
-        <!-- offset z: 0.015 ; rotated -90° about X-axis -->
         <origin xyz="0 -0.015 0" rpy="${-PI/2} 0 0"/>
         <geometry>
           <cylinder radius="0.0365" length="0.03"/>
@@ -152,7 +171,6 @@
         </geometry>
       </visual>
       <collision name="front_right_wheel_collision">
-        <!-- offset z: 0.015 ; rotated -90° about X-axis -->
         <origin xyz="0 0.015 0" rpy="${-PI/2} 0 0"/>
         <geometry>
           <cylinder radius="0.0365" length="0.03"/>
@@ -193,7 +211,6 @@
         </geometry>
       </visual>
       <collision name="rear_left_wheel_collision">
-        <!-- offset z: 0.015 ; rotated -90° about X-axis -->
         <origin xyz="0 -0.015 0" rpy="${-PI/2} 0 0"/>
         <geometry>
           <cylinder radius="0.0365" length="0.03"/>
@@ -234,7 +251,6 @@
         </geometry>
       </visual>
       <collision name="rear_right_wheel_collision">
-        <!-- offset z: 0.015 ; rotated -90° about X-axis -->
         <origin xyz="0 0.015 0" rpy="${-PI/2} 0 0"/>
         <geometry>
           <cylinder radius="0.0365" length="0.03"/>
@@ -258,7 +274,7 @@
   <xacro:arg name="use_mesh" default="true" />
   <xacro:property name="d435_name" value="d435i" />
   <xacro:property name="l515_name" value="l515" />
-
+<!-- 
   <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i.urdf.xacro"/>
   <xacro:sensor_d435i name="${d435_name}" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
     <origin xyz="0.1 0 0.184" rpy="0 0 0"/>
@@ -268,11 +284,51 @@
   <xacro:sensor_l515 name="${l515_name}" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" add_plug="$(arg add_plug)" use_mesh="$(arg use_mesh)">
     <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
   </xacro:sensor_l515>
+ -->
+  
+  <joint name="${l515_name}_joint" type="fixed">
+    <origin xyz="0.1 0 0.07" rpy="0 0 0"/>
+    <parent link="$(arg ns)/base_link"/>
+    <child link="${l515_name}_link"/>
+  </joint>
+  <link name="${l515_name}_link">
+    <visual>
+     <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <box size="0.012 0.132 0.020"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.003 0.065 0.007" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.132 0.020"/>
+      </geometry>
+    </collision>
+  </link>
 
-  <!-- <gazebo reference="$(arg ns)/${l515_name}_depth_frame"> -->
-  <gazebo reference="${l515_name}_depth_optical_frame">
+  <joint name="${l515_name}_depth_joint" type="fixed">
+    <origin xyz="0.005 0.028 0.013" rpy="0 0 0"/>
+    <parent link="${l515_name}_link"/>
+    <child link="${l515_name}_depth_frame"/>
+  </joint>
+  <link name="${l515_name}_depth_frame">
+    <xacro:inertial_dummy/>
+  </link>
+
+  <joint name="${l515_name}_depth_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="${PI/2} 0 ${-PI/2}"/>
+    <parent link="${l515_name}_depth_frame"/>
+    <child link="${l515_name}_depth_optical_frame"/>
+  </joint>
+
+  <link name="${l515_name}_depth_optical_frame">
+    <xacro:inertial_dummy/>
+  </link>
+
+  <gazebo reference="${l515_name}_depth_frame">
     <sensor name="rgbd_camera" type="rgbd_camera">
-      <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id>
+      <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
+      <gz_frame_id>${l515_name}_depth_frame</gz_frame_id>
       <camera name="${l515_name}">
         <horizontal_fov>1.3962634</horizontal_fov>
         <lens>
@@ -299,12 +355,12 @@
         </image>
         <clip>
           <near>0.01</near>
-          <far>300</far>
+          <far>20</far>
         </clip>
         <depth_camera>
           <clip>
             <near>0.1</near>
-            <far>10</far>
+            <far>20</far>
           </clip>
         </depth_camera>
         <noise>
@@ -312,12 +368,14 @@
           <mean>0</mean>
           <stddev>0.003</stddev>
         </noise>
+        <optical_frame_id>${l515_name}_depth_optical_frame</optical_frame_id>
       </camera>
       <always_on>1</always_on>
       <update_rate>10</update_rate>
       <visualize>1</visualize>
       <topic>$(arg ns)/depth_camera</topic>
     </sensor>
+    
   </gazebo>
 
   <gazebo>
@@ -339,18 +397,19 @@
       <max_velocity>10.0</max_velocity>
       <min_acceleration>-10</min_acceleration>
       <max_acceleration>10</max_acceleration>
-      <!-- <topic>cmd_vel</topic> -->
+      <topic>$(arg ns)/cmd_vel</topic>
       <odom_topic>encoder</odom_topic>
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->
-    <plugin filename="gz-sim-odometry-publisher-system"
-      name="gz::sim::systems::OdometryPublisher">
+    <plugin filename="ignition-gazebo-odometry-publisher-system"
+      name="ignition::gazebo::systems::OdometryPublisher">
       <dimensions>3</dimensions>
       <odom_frame>$(arg ns)/odom</odom_frame>
       <robot_base_frame>$(arg ns)/base_footprint</robot_base_frame>
       <publish_link_pose>true</publish_link_pose>
       <tf_topic>$(arg ns)/tf</tf_topic> 
+      <odom_topic>$(arg ns)/odom</odom_topic>
     </plugin>
 
     <plugin
