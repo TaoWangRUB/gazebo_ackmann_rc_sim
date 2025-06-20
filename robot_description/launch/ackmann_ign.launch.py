@@ -161,7 +161,23 @@ def generate_launch_description():
             ('/ackmann/tf', '/tf'),
         ]
     ) 
-    
+
+    tf_pub = Node(
+        name='camera_stf',
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        output='screen',
+        arguments=[
+            '0', '0', '0',
+            '1.5707', '-1.5707', '0',
+            'l515_depth_optical_frame',
+            [robot_name, '/ackmann/base_footprint/rgbd_camera']
+        ],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+        ]
+    )
     open_rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -178,6 +194,7 @@ def generate_launch_description():
     ld.add_action(robot_state_publisher)
     ld.add_action(joint_state_publisher)
     ld.add_action(gz_spawn_entity)
+    ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(open_rviz)
     return ld

@@ -59,7 +59,8 @@ def generate_launch_description():
             ('slam', 'false'),
             ('localization', LaunchConfiguration('localization')),
             ('nav2', LaunchConfiguration('nav2')),
-            ('rviz', LaunchConfiguration('rviz'))
+            ('rviz', LaunchConfiguration('rviz')),
+            ('y', '-2')
         ]
     )
 

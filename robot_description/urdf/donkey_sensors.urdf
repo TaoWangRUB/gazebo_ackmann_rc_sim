@@ -316,7 +316,7 @@
   </link>
 
   <joint name="${l515_name}_depth_optical_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="${PI/2} 0 ${-PI/2}"/>
+    <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
     <parent link="${l515_name}_depth_frame"/>
     <child link="${l515_name}_depth_optical_frame"/>
   </joint>
@@ -328,7 +328,7 @@
   <gazebo reference="${l515_name}_depth_frame">
     <sensor name="rgbd_camera" type="rgbd_camera">
       <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
-      <gz_frame_id>${l515_name}_depth_frame</gz_frame_id>
+      <!-- <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id> -->
       <camera name="${l515_name}">
         <horizontal_fov>1.3962634</horizontal_fov>
         <lens>
