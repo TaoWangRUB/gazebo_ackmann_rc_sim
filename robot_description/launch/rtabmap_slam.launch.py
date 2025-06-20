@@ -57,7 +57,7 @@ def generate_launch_description():
 
     rtabmap_parameters={
           'subscribe_rgbd':True,
-          'subscribe_scan':False,
+          'subscribe_scan':True,
           'use_action_for_goal':True,
           'odom_sensor_sync': True,
           # RTAB-Map's parameters should be strings:
@@ -66,7 +66,7 @@ def generate_launch_description():
 
     # Shared parameters between different nodes
     shared_parameters={
-          'frame_id':'ackmann/base_link',
+          'frame_id':'ackmann/base_footprint',
           'use_sim_time':use_sim_time,
           # RTAB-Map's parameters should be strings:
           'Reg/Strategy':'1',
@@ -76,10 +76,12 @@ def generate_launch_description():
     }
 
     remappings=[
-          ('odom', '/ackmann/odom'),
+          ('scan', '/scan'),
+          ('odom', '/odom'),
           ('rgb/image', '/ackmann/depth_camera/image'),
           ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
-          ('depth/image', '/ackmann/depth_camera/depth_image')]
+          ('depth/image', '/ackmann/depth_camera/depth_image'),
+          ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
     
     # Nodes to launch
     rgbd_sync = Node(
@@ -116,9 +118,66 @@ def generate_launch_description():
         parameters=[rtabmap_parameters, shared_parameters],
         remappings=remappings)
     
+    # rgbd to laserscan node 
+    # This node converts depth images to laser scans, which can be used for navigation.
+    depth_to_scan = Node(
+        package='depthimage_to_laserscan',
+        executable='depthimage_to_laserscan_node',
+        name='rgbd_to_scan',
+        parameters=[{
+            'scan_height': 10,          # Number of pixel rows to use
+            'range_min': 0.1,           # Minimum range (meters)
+            'range_max': 20.,           # Maximum range (meters)
+            'output_frame': 'ackmann/base_footprint',
+            'angle_min': -3.1415,       # -π radians
+            'angle_max': 3.1415,        # π radians
+            'angle_increment': 0.0175,  # ~1 degree resolution
+        }],
+        remappings=[
+            ('depth', '/ackmann/depth_camera/depth_image'),
+            ('depth_camera_info', '/ackmann/depth_camera/camera_info'),
+            ('scan', '/scan')
+        ],
+    )
+
+    # Obstacle detection with the camera for nav2 local costmap.
+    # First, we need to convert depth image to a point cloud.
+    rgbd_to_points = Node(
+        package='rtabmap_util', executable='point_cloud_xyz', output='screen',
+        parameters=[{'decimation': 2,
+                     'max_depth': 3.0,
+                     'voxel_size': 0.02}],
+        remappings=remappings)
+    
+    # Second, we segment the floor from the obstacles.
+    parameters={
+          'frame_id':'base_footprint',
+          'use_sim_time':use_sim_time,
+          'subscribe_depth':True,
+          'use_action_for_goal':True,
+          'Reg/Force3DoF':'true',
+          'Grid/RayTracing':'true', # Fill empty space
+          'Grid/3D':'false', # Use 2D occupancy
+          'Grid/RangeMax':'3',
+          'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
+          'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
+          'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
+          'Optimizer/GravitySigma':'0' # Disable imu constraints (we are already in 2D)
+    }
+
+    obstacle_detection = Node(
+        package='rtabmap_util', executable='obstacles_detection', output='screen',
+        parameters=[parameters],
+        remappings=[('obstacles', '/camera/obstacles'),
+                    ('ground', '/camera/ground')])
+    
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(rgbd_sync)
+    #ld.add_action(icp_odom)
+    ld.add_action(depth_to_scan)
+    #ld.add_action(rgbd_to_points)
+    #ld.add_action(obstacle_detection)
     ld.add_action(slam)
     ld.add_action(localization)
     ld.add_action(rtabmap_viz)

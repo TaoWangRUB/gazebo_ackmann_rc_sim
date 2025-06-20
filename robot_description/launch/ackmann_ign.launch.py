@@ -6,6 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetE
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
+from launch.conditions import IfCondition
 
 robot_base_color = '0.0 0.0 1.0 0.95' #Ign and Rviz color of the robot's main body (rgba)
 
@@ -44,6 +45,19 @@ def generate_launch_description():
         'irobot_create_ignition_bringup')
     pkg_ros_ign_gazebo = get_package_share_directory(
         'ros_ign_gazebo')
+    pkg_turtlebot4_navigation = get_package_share_directory(
+        'turtlebot4_navigation')
+    pkg_turtlebot4_viz = get_package_share_directory(
+        'turtlebot4_viz')
+    
+    rviz_launch = PathJoinSubstitution(
+        [pkg_turtlebot4_viz, 'launch', 'view_robot.launch.py'])
+    localization_launch = PathJoinSubstitution(
+        [pkg_turtlebot4_navigation, 'launch', 'localization.launch.py'])
+    slam_launch = PathJoinSubstitution(
+        [pkg_turtlebot4_navigation, 'launch', 'slam.launch.py'])
+    nav2_launch = PathJoinSubstitution(
+        [pkg_turtlebot4_navigation, 'launch', 'nav2.launch.py'])
     
     # Set ignition resource path
     ign_resource_path = SetEnvironmentVariable(
@@ -159,9 +173,11 @@ def generate_launch_description():
         output='screen',
         remappings=[ 
             ('/ackmann/tf', '/tf'),
+            ('/ackmann/odom', '/odom'),
         ]
     ) 
 
+    # Static transform publisher for depth camera
     tf_pub = Node(
         name='camera_stf',
         package='tf2_ros',
@@ -178,12 +194,50 @@ def generate_launch_description():
             ('/tf_static', 'tf_static'),
         ]
     )
-    open_rviz = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
-        arguments=['-d', str(pkg_robot_ignition_bringup+"/rviz/ns_robot.rviz")],
+
+    # Localization
+    localization = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([localization_launch]),
+        launch_arguments=[
+            ('namespace', namespace),
+            ('use_sim_time', LaunchConfiguration('use_sim_time'))
+        ],
+        condition=IfCondition(LaunchConfiguration('localization'))
+    )
+
+    # SLAM
+    slam = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([slam_launch]),
+        launch_arguments=[
+            ('namespace', namespace),
+            ('use_sim_time', LaunchConfiguration('use_sim_time'))
+        ],
+        condition=IfCondition(LaunchConfiguration('slam'))
+    )
+
+    # Nav2
+    nav2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([nav2_launch]),
+        launch_arguments=[
+            ('namespace', ''),
+            ('use_sim_time', LaunchConfiguration('use_sim_time')),
+            ('slam', LaunchConfiguration('slam')),
+            ('localization', LaunchConfiguration('localization')),
+            ('autostart', 'true'),
+            ('params_file', PathJoinSubstitution(
+                [pkg_robot_description, 'config', 'nav2_params.yaml'])),
+            
+        ],
+        condition=IfCondition(LaunchConfiguration('nav2'))
+    )
+
+    # Open RViz
+    rviz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([rviz_launch]),
+        launch_arguments=[
+            ('namespace', ''),
+            ('use_sim_time', LaunchConfiguration('use_sim_time'))],
+        condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
     # Create launch description and add actions
@@ -196,5 +250,8 @@ def generate_launch_description():
     ld.add_action(gz_spawn_entity)
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
-    ld.add_action(open_rviz)
+    #ld.add_action(localization)
+    #ld.add_action(slam)
+    #ld.add_action(nav2)
+    ld.add_action(rviz)
     return ld
