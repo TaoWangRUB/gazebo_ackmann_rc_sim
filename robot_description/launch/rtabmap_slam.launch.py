@@ -29,6 +29,20 @@ from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
 
+ARGUMENTS = [
+    # Launch arguments
+        DeclareLaunchArgument(
+            'use_sim_time', default_value='false', choices=['true', 'false'],
+            description='Use simulation (Gazebo) clock if true'),
+        
+        DeclareLaunchArgument(
+            'localization', default_value='false', choices=['true', 'false'],
+            description='Launch rtabmap in localization mode (a map should have been already created).'),
+        
+        DeclareLaunchArgument(
+            'rtabmap_viz', default_value='true', choices=['true', 'false'],
+            description='Launch rtabmap_viz for visualization.'),
+]
 
 def generate_launch_description():
 
@@ -43,7 +57,7 @@ def generate_launch_description():
 
     rtabmap_parameters={
           'subscribe_rgbd':True,
-          'subscribe_scan':True,
+          'subscribe_scan':False,
           'use_action_for_goal':True,
           'odom_sensor_sync': True,
           # RTAB-Map's parameters should be strings:
@@ -52,7 +66,7 @@ def generate_launch_description():
 
     # Shared parameters between different nodes
     shared_parameters={
-          'frame_id':'base_link',
+          'frame_id':'ackmann/base_link',
           'use_sim_time':use_sim_time,
           # RTAB-Map's parameters should be strings:
           'Reg/Strategy':'1',
@@ -62,58 +76,50 @@ def generate_launch_description():
     }
 
     remappings=[
-          ('odom', 'icp_odom'),
-          ('rgb/image', '/oakd/rgb/preview/image_raw'),
-          ('rgb/camera_info', '/oakd/rgb/preview/camera_info'),
-          ('depth/image', '/oakd/rgb/preview/depth')]
+          ('odom', '/ackmann/odom'),
+          ('rgb/image', '/ackmann/depth_camera/image'),
+          ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
+          ('depth/image', '/ackmann/depth_camera/depth_image')]
+    
+    # Nodes to launch
+    rgbd_sync = Node(
+        package='rtabmap_sync', executable='rgbd_sync', output='screen',
+        parameters=[{'approx_sync':False, 'use_sim_time':use_sim_time}],
+        remappings=remappings)
 
-    return LaunchDescription([
+    icp_odom = Node(
+        package='rtabmap_odom', executable='icp_odometry', output='screen',
+        parameters=[icp_parameters, shared_parameters],
+        remappings=remappings,
+        arguments=["--ros-args", "--log-level", 'icp_odometry:=warn'])
 
-        # Launch arguments
-        DeclareLaunchArgument(
-            'use_sim_time', default_value='false', choices=['true', 'false'],
-            description='Use simulation (Gazebo) clock if true'),
+    # SLAM Mode:
+    slam = Node(
+        condition=UnlessCondition(localization),
+        package='rtabmap_slam', executable='rtabmap', output='screen',
+        parameters=[rtabmap_parameters, shared_parameters],
+        remappings=remappings,
+        arguments=['-d'])
         
-        DeclareLaunchArgument(
-            'localization', default_value='false', choices=['true', 'false'],
-            description='Launch rtabmap in localization mode (a map should have been already created).'),
-        
-        DeclareLaunchArgument(
-            'rtabmap_viz', default_value='true', choices=['true', 'false'],
-            description='Launch rtabmap_viz for visualization.'),
+    # Localization mode:
+    localization = Node(
+        condition=IfCondition(localization),
+        package='rtabmap_slam', executable='rtabmap', output='screen',
+        parameters=[rtabmap_parameters, shared_parameters,
+            {'Mem/IncrementalMemory':'False',
+            'Mem/InitWMWithAllNodes':'True'}],
+        remappings=remappings)
 
-        # Nodes to launch
-        Node(
-            package='rtabmap_sync', executable='rgbd_sync', output='screen',
-            parameters=[{'approx_sync':False, 'use_sim_time':use_sim_time}],
-            remappings=remappings),
-
-        Node(
-            package='rtabmap_odom', executable='icp_odometry', output='screen',
-            parameters=[icp_parameters, shared_parameters],
-            remappings=remappings,
-            arguments=["--ros-args", "--log-level", 'icp_odometry:=warn']),
-
-        # SLAM Mode:
-        Node(
-            condition=UnlessCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[rtabmap_parameters, shared_parameters],
-            remappings=remappings,
-            arguments=['-d']),
-            
-        # Localization mode:
-        Node(
-            condition=IfCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[rtabmap_parameters, shared_parameters,
-              {'Mem/IncrementalMemory':'False',
-               'Mem/InitWMWithAllNodes':'True'}],
-            remappings=remappings),
-
-        Node(
-            condition=IfCondition(rtabmap_viz),
-            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-            parameters=[rtabmap_parameters, shared_parameters],
-            remappings=remappings),
-    ])
+    rtabmap_viz = Node(
+        condition=IfCondition(rtabmap_viz),
+        package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        parameters=[rtabmap_parameters, shared_parameters],
+        remappings=remappings)
+    
+    # Create launch description and add actions
+    ld = LaunchDescription(ARGUMENTS)
+    ld.add_action(rgbd_sync)
+    ld.add_action(slam)
+    ld.add_action(localization)
+    ld.add_action(rtabmap_viz)
+    return ld

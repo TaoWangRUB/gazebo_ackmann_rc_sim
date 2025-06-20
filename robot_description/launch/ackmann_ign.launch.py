@@ -147,6 +147,7 @@ def generate_launch_description():
             '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '@ignition.msgs.Image',
             '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '@ignition.msgs.Image',
             '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '@ignition.msgs.Odometry',
+            '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + '@ignition.msgs.Twist',
             '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '@ignition.msgs.LaserScan'
             
@@ -157,6 +158,7 @@ def generate_launch_description():
         }],
         output='screen',
         remappings=[ 
+            ('/ackmann/tf', '/tf'),
         ]
     ) 
     

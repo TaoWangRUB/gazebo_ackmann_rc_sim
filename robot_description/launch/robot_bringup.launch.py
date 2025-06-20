@@ -50,7 +50,7 @@ def generate_launch_description():
     ignition_launch = PathJoinSubstitution(
         [pkg_robot_ignition_bringup, 'launch', 'ackmann_ign.launch.py'])
     rtabmap_launch = PathJoinSubstitution(
-        [pkg_rtabmap_demos, 'launch', 'turtlebot4', 'rtabmap_slam.launch.py'])
+        [pkg_rtabmap_demos, 'launch', 'rtabmap_slam.launch.py'])
 
     ignition = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ignition_launch]),
