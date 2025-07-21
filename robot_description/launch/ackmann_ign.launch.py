@@ -200,15 +200,20 @@ def generate_launch_description():
     control_params_file = PathJoinSubstitution(
         [pkg_controller, 'config', 'ackermann_controller.yaml'])
     
-    """ ros2_controller = IncludeLaunchDescription(
+    ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
         launch_arguments=[
             ('namespace', namespace),
         ]
-    ) """
-    control_params_file = PathJoinSubstitution(
-        [pkg_controller, 'config', 'ackermann_controller.yaml'])
+    ) 
+    ros2_controller_callback = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit=[ros2_controller],
+        )
+    )
+    """
     ackermann_controller_node = Node(
         package='controller_manager',
         executable='spawner',
@@ -237,7 +242,7 @@ def generate_launch_description():
             target_action=joint_state_controller_node,
             on_exit=[ackermann_controller_node],
         )
-    )
+    ) """
 
     # Localization
     localization = IncludeLaunchDescription(
@@ -294,8 +299,7 @@ def generate_launch_description():
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
-    ld.add_action(joint_state_broadcaster_callback)
-    ld.add_action(ackermann_controller_callback)
+    ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
     #ld.add_action(nav2)

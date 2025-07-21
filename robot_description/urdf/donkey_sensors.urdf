@@ -267,50 +267,27 @@
       </collision>
   </link>
 
-  <ros2_control name="AckermannDriveController" type="system">
+  <ros2_control name="GazeboSimSystem" type="system">
     <hardware>
-      <plugin>gz_ros2_control/GazeboSystem</plugin>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
-    
-    <!-- Steering joints -->
-    <joint name="$(arg ns)/front_left_wheel_steering_joint">
-      <command_interface name="position">
-        <param name="min">-0.6</param>
-        <param name="max">0.6</param>
-      </command_interface>
-      <state_interface name="position"/>
-    </joint>
-    
-    <joint name="$(arg ns)/front_right_wheel_steering_joint">
-      <command_interface name="position">
-        <param name="min">-0.6</param>
-        <param name="max">0.6</param>
-      </command_interface>
-      <state_interface name="position"/>
-    </joint>
-
-    <joint name="$(arg ns)/front_left_wheel_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-
-    <joint name="$(arg ns)/front_right_wheel_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-
     <joint name="$(arg ns)/rear_left_wheel_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <command_interface name="velocity" />
+      <state_interface name="velocity" />
+      <state_interface name="position" />
     </joint>
-
     <joint name="$(arg ns)/rear_right_wheel_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <command_interface name="velocity" />
+      <state_interface name="velocity" />
+      <state_interface name="position" />
+    </joint>
+    <joint name="$(arg ns)/front_left_wheel_steering_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
+    </joint>
+    <joint name="$(arg ns)/front_right_wheel_steering_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
     </joint>
   </ros2_control>
   
@@ -447,7 +424,7 @@
       <odom_topic>encoder</odom_topic>
     </plugin> -->
 
-    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
     </plugin>
 

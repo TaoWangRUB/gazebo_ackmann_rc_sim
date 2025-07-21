@@ -24,31 +24,16 @@ def generate_launch_description():
     control_params_file = PathJoinSubstitution(
         [pkg_control, 'config', 'ackermann_controller.yaml'])
     
-    # # Controller manager (ros2_control_node)
-    # controller_manager = Node(
-    #     package='controller_manager',
-    #     executable='ros2_control_node',
-    #     namespace=namespace,
-    #     parameters=[{
-    #         '~/robot_description': '/robot_description',
-    #         'use_sim_time': use_sim_time
-    #         }, control_params_file],
-    #     output='screen'
-    # )
-    
-    # Ackermann steering controller
-    # This controller is used to control the steering of the robot
-    # It is a part of the ros2_control framework
-    # and is responsible for controlling the steering angle of the front wheels
-    # It is a required controller for the ackermann drive system
-    # It is used to control the steering angle of the front wheels
-    ackermann_controller_node = Node(
+    # Controller manager (ros2_control_node)
+    controller_manager = Node(
         package='controller_manager',
-        executable='spawner',
-        namespace=namespace,  # Namespace is not pushed when used in EventHandler
-        parameters=[control_params_file],
-        arguments=['ackermann_steering_controller', '-c', 'controller_manager'],
-        output='screen',
+        executable='ros2_control_node',
+        namespace=namespace,
+        parameters=[{
+            '~/robot_description': '/robot_description',
+            'use_sim_time': use_sim_time
+            }, control_params_file],
+        output='screen'
     )
 
     # Joint state broadcaster
@@ -60,7 +45,22 @@ def generate_launch_description():
     joint_state_controller_node = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['joint_state_broadcaster', '-c', 'controller_manager'],
+        arguments=['joint_state_broadcaster'],
+        output='screen',
+    )
+    
+    # Ackermann steering controller
+    # This controller is used to control the steering of the robot
+    # It is a part of the ros2_control framework
+    # and is responsible for controlling the steering angle of the front wheels
+    # It is a required controller for the ackermann drive system
+    # It is used to control the steering angle of the front wheels
+    ackermann_controller_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['ackermann_steering_controller', 
+                   '--param-file',
+                   control_params_file,],
         output='screen',
     )
 
@@ -106,9 +106,9 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription(ARGUMENTS)
+    ld.add_action(ackmann_controller_callback)
     ld.add_action(controller_manager)
     ld.add_action(joint_state_controller_node)
-    ld.add_action(ackmann_controller_callback)
     ld.add_action(tf_namespaced_odom_publisher)
     ld.add_action(tf_namespaced_base_link_publisher)
 

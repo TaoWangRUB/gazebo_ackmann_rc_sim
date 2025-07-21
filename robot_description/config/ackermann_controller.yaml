@@ -9,13 +9,20 @@ controller_manager:
     ackermann_steering_controller:
       type: ackermann_steering_controller/AckermannSteeringController
 
+
+# No specific joint configuration - let it auto-discover
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+    publish_rate: 50.0
+
 ackermann_steering_controller:
   ros__parameters:
-    wheel_base: 0.224
+    wheelbase: 0.224
     front_wheel_track: 0.2
     rear_wheel_track: 0.2
-    front_wheel_radius: 0.035
-    rear_wheel_radius: 0.035
+    front_wheels_radius: 0.035
+    rear_wheels_radius: 0.035
     front_steering: true
     reference_timeout: 2.0
     use_stamped_vel: true
