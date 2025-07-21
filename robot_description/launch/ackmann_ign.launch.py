@@ -49,6 +49,8 @@ def generate_launch_description():
         'turtlebot4_navigation')
     pkg_turtlebot4_viz = get_package_share_directory(
         'turtlebot4_viz')
+    pkg_controller = get_package_share_directory(
+        'robot_description')
     
     rviz_launch = PathJoinSubstitution(
         [pkg_turtlebot4_viz, 'launch', 'view_robot.launch.py'])
@@ -195,6 +197,14 @@ def generate_launch_description():
         ]
     )
 
+    # Controller manager
+    ros2_controller = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
+        launch_arguments=[
+            ('namespace', namespace),
+        ]
+    )
     # Localization
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([localization_launch]),
@@ -250,6 +260,7 @@ def generate_launch_description():
     ld.add_action(gz_spawn_entity)
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
+    ld.add_action(ros2_controller)
     #ld.add_action(localization)
     #ld.add_action(slam)
     #ld.add_action(nav2)

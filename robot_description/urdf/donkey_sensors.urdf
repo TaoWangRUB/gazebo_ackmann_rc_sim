@@ -267,6 +267,56 @@
       </collision>
   </link>
 
+  <ros2_control name="AckermannDriveController" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    
+    <!-- Steering joints -->
+    <joint name="$(arg ns)/front_left_wheel_steering_joint">
+      <command_interface name="position">
+        <param name="min">-0.6</param>
+        <param name="max">0.6</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    
+    <joint name="$(arg ns)/front_right_wheel_steering_joint">
+      <command_interface name="position">
+        <param name="min">-0.6</param>
+        <param name="max">0.6</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <!-- Wheel joints -->
+    <!-- <joint name="$(arg ns)/front_left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="$(arg ns)/front_right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint> -->
+
+    <joint name="$(arg ns)/rear_left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="$(arg ns)/rear_right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  
   <!-- SENSORS -->
   <!-- RGBD CAMERA -->
   <xacro:arg name="use_nominal_extrinsics" default="true" />
@@ -379,13 +429,12 @@
   </gazebo>
 
   <gazebo>
-    <plugin
+    <!-- Ackermann steering plugin -->
+    <!-- <plugin
       filename="gz-sim-ackermann-steering-system"
       name="gz::sim::systems::AckermannSteering">
-      <left_joint>$(arg ns)/front_left_wheel_joint</left_joint>
       <left_joint>$(arg ns)/rear_left_wheel_joint</left_joint>
-      <right_joint>$(arg ns)/front_right_wheel_joint</right_joint>
-      <right_joint>$(arg ns)/front_right_wheel_joint</right_joint>
+      <right_joint>$(arg ns)/rear_right_wheel_joint</right_joint>
       <left_steering_joint>$(arg ns)/front_left_wheel_steering_joint</left_steering_joint>
       <right_steering_joint>$(arg ns)/front_right_wheel_steering_joint</right_steering_joint>
       <kingpin_width>0.199</kingpin_width>
@@ -399,6 +448,11 @@
       <max_acceleration>10</max_acceleration>
       <topic>$(arg ns)/cmd_vel</topic>
       <odom_topic>encoder</odom_topic>
+    </plugin> -->
+
+    <plugin name="gz_ros2_control" filename="libgz_ros2_control.so">
+      <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
+      <robot_param_node>/robot_state_publisher</robot_param_node>
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->
