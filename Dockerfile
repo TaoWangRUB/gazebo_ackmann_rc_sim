@@ -20,7 +20,7 @@ RUN apt-get update && \
     apt-get purge -y ros-humble-ros-gz* && \
     apt-get install -y \
     #ros-humble-turtlebot3* \
-    ros-humble-turtlebot4-simulator ros-humble-irobot-create-nodes \
+    ros-humble-turtlebot4-simulator ros-humble-irobot-create-nodes ros-humble-gz-ros2-control ros-humble-ign-ros2-control-demos ros-humble-ros2controlcli\
     ros-humble-realsense2* \
     ros-humble-rtabmap \
     ros-humble-rtabmap-ros \

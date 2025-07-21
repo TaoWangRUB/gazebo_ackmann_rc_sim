@@ -2,12 +2,12 @@ import os, xacro
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
-
+from launch.event_handlers import OnProcessExit
 robot_base_color = '0.0 0.0 1.0 0.95' #Ign and Rviz color of the robot's main body (rgba)
 
 ARGUMENTS = [
@@ -197,14 +197,48 @@ def generate_launch_description():
         ]
     )
 
-    # Controller manager
-    ros2_controller = IncludeLaunchDescription(
+    control_params_file = PathJoinSubstitution(
+        [pkg_controller, 'config', 'ackermann_controller.yaml'])
+    
+    """ ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
         launch_arguments=[
             ('namespace', namespace),
         ]
+    ) """
+    control_params_file = PathJoinSubstitution(
+        [pkg_controller, 'config', 'ackermann_controller.yaml'])
+    ackermann_controller_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        namespace=namespace,  # Namespace is not pushed when used in EventHandler
+        parameters=[control_params_file],
+        arguments=['ackermann_steering_controller'],
+        output='screen',
     )
+    joint_state_controller_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster'],
+        output='screen',
+    )
+
+    # Ensure ackermann_controller_node starts after joint_state_broadcaster_spawner
+    joint_state_broadcaster_callback = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit=[joint_state_controller_node],
+        )
+    )
+    # Ensure diffdrive_controller_node starts after joint_state_broadcaster_spawner
+    ackermann_controller_callback = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_controller_node,
+            on_exit=[ackermann_controller_node],
+        )
+    )
+
     # Localization
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([localization_launch]),
@@ -257,10 +291,11 @@ def generate_launch_description():
     ld.add_action(clock_bridge)
     ld.add_action(robot_state_publisher)
     ld.add_action(joint_state_publisher)
-    ld.add_action(gz_spawn_entity)
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
-    ld.add_action(ros2_controller)
+    ld.add_action(gz_spawn_entity)
+    ld.add_action(joint_state_broadcaster_callback)
+    ld.add_action(ackermann_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
     #ld.add_action(nav2)

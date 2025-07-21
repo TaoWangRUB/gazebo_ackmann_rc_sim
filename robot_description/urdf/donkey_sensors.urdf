@@ -279,7 +279,6 @@
         <param name="max">0.6</param>
       </command_interface>
       <state_interface name="position"/>
-      <state_interface name="velocity"/>
     </joint>
     
     <joint name="$(arg ns)/front_right_wheel_steering_joint">
@@ -288,11 +287,9 @@
         <param name="max">0.6</param>
       </command_interface>
       <state_interface name="position"/>
-      <state_interface name="velocity"/>
     </joint>
 
-    <!-- Wheel joints -->
-    <!-- <joint name="$(arg ns)/front_left_wheel_joint">
+    <joint name="$(arg ns)/front_left_wheel_joint">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -302,7 +299,7 @@
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-    </joint> -->
+    </joint>
 
     <joint name="$(arg ns)/rear_left_wheel_joint">
       <command_interface name="velocity"/>
@@ -450,9 +447,8 @@
       <odom_topic>encoder</odom_topic>
     </plugin> -->
 
-    <plugin name="gz_ros2_control" filename="libgz_ros2_control.so">
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
-      <robot_param_node>/robot_state_publisher</robot_param_node>
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->

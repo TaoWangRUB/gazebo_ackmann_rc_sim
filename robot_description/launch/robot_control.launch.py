@@ -3,23 +3,45 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler
 from launch.conditions import LaunchConfigurationNotEquals
 from launch.event_handlers import OnProcessExit
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command
 from launch_ros.actions import Node
 
 ARGUMENTS = [
     DeclareLaunchArgument('namespace', default_value='',
                           description='Robot namespace'),
+    DeclareLaunchArgument('use_sim_time', default_value='true',
+                          choices=['true', 'false'],
+                          description='use_sim_time'),
 ]
 
 
 def generate_launch_description():
-    pkg_create3_control = get_package_share_directory('robot_description')
+    pkg_control = get_package_share_directory('robot_description')
 
     namespace = LaunchConfiguration('namespace')
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
     control_params_file = PathJoinSubstitution(
-        [pkg_create3_control, 'config', 'ackermann_controller.yaml'])
-
+        [pkg_control, 'config', 'ackermann_controller.yaml'])
+    
+    # # Controller manager (ros2_control_node)
+    # controller_manager = Node(
+    #     package='controller_manager',
+    #     executable='ros2_control_node',
+    #     namespace=namespace,
+    #     parameters=[{
+    #         '~/robot_description': '/robot_description',
+    #         'use_sim_time': use_sim_time
+    #         }, control_params_file],
+    #     output='screen'
+    # )
+    
+    # Ackermann steering controller
+    # This controller is used to control the steering of the robot
+    # It is a part of the ros2_control framework
+    # and is responsible for controlling the steering angle of the front wheels
+    # It is a required controller for the ackermann drive system
+    # It is used to control the steering angle of the front wheels
     ackermann_controller_node = Node(
         package='controller_manager',
         executable='spawner',
@@ -29,6 +51,12 @@ def generate_launch_description():
         output='screen',
     )
 
+    # Joint state broadcaster
+    # This node is responsible for publishing the joint states of the robot
+    # It is a part of the ros2_control framework
+    # and is used to publish the joint states of the robot to the /joint_states topic
+    # It is required for the robot to be able to move
+    # and to be able to visualize the robot in RViz
     joint_state_controller_node = Node(
         package='controller_manager',
         executable='spawner',
@@ -78,7 +106,7 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription(ARGUMENTS)
-
+    ld.add_action(controller_manager)
     ld.add_action(joint_state_controller_node)
     ld.add_action(ackmann_controller_callback)
     ld.add_action(tf_namespaced_odom_publisher)
