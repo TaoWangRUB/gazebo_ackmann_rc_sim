@@ -281,6 +281,14 @@
       <state_interface name="velocity" />
       <state_interface name="position" />
     </joint>
+    <joint name="$(arg ns)/front_left_wheel_joint">
+      <state_interface name="velocity" />
+      <state_interface name="position" />
+    </joint>
+    <joint name="$(arg ns)/front_right_wheel_joint">
+      <state_interface name="velocity" />
+      <state_interface name="position" />
+    </joint>
     <joint name="$(arg ns)/front_left_wheel_steering_joint">
       <command_interface name="position" />
       <state_interface name="position" />
@@ -426,6 +434,12 @@
 
     <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
+      <ros> 
+        <namespace></namespace> 
+        <remapping>ackermann_steering_controller/reference_unstamped:=cmd_vel</remapping> 
+        <!-- <remapping>ackermann_steering_controller/odometry:=odom</remapping>  -->
+        <!-- <remapping>ackermann_steering_controller/tf_odometry:=tf</remapping>  -->
+      </ros> 
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->

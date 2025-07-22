@@ -178,7 +178,7 @@ def generate_launch_description():
         remappings=[ 
             ('/ackmann/tf', '/tf'),
             ('/ackmann/odom', '/odom'),
-            ('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
+            #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
     ) 
 

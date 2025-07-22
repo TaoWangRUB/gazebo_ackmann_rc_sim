@@ -33,7 +33,11 @@ def generate_launch_description():
             '~/robot_description': '/robot_description',
             'use_sim_time': use_sim_time
             }, control_params_file],
-        output='screen'
+        output='screen',
+        remappings=[
+            # Remap the ackermann controller's input topic to cmd_vel
+            ('/ackermann_steering_controller/reference_unstamped', 'cmd_vel'),
+        ],
     )
 
     # Joint state broadcaster
@@ -62,6 +66,10 @@ def generate_launch_description():
                    '--param-file',
                    control_params_file,],
         output='screen',
+        remappings=[
+            # Remap the ackermann controller's input topic to cmd_vel
+            ('/reference_unstamped', '/cmd_vel'),
+        ],
     )
 
     # Ensure diffdrive_controller_node starts after joint_state_broadcaster_spawner
@@ -107,7 +115,7 @@ def generate_launch_description():
 
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(ackmann_controller_callback)
-    ld.add_action(controller_manager)
+    # ld.add_action(controller_manager)
     ld.add_action(joint_state_controller_node)
     ld.add_action(tf_namespaced_odom_publisher)
     ld.add_action(tf_namespaced_base_link_publisher)

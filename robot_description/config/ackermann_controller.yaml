@@ -25,7 +25,7 @@ ackermann_steering_controller:
     rear_wheels_radius: 0.035
     front_steering: true
     reference_timeout: 2.0
-    use_stamped_vel: true
+    use_stamped_vel: false
     
     # Rear wheels are the drive wheels
     rear_wheels_names: [
@@ -45,7 +45,7 @@ ackermann_steering_controller:
     publish_odom: true
     publish_odom_tf: true
     
-    cmd_vel_topic: /ackmann/cmd_vel
+    # cmd_vel_topic: /ackmann/cmd_vel
     odom_topic: /ackmann/odom
     tf_topic: /ackmann/tf
     odom_frame_id: ackmann/odom
