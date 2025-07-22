@@ -301,7 +301,7 @@ def generate_launch_description():
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
-    #ld.add_action(ros2_controller_callback)
+    ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
     #ld.add_action(nav2)
