@@ -267,7 +267,7 @@
       </collision>
   </link>
 
-  <ros2_control name="GazeboSimSystem" type="system">
+  <!-- <ros2_control name="GazeboSimSystem" type="system">
     <hardware>
       <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
@@ -289,7 +289,7 @@
       <command_interface name="position" />
       <state_interface name="position" />
     </joint>
-  </ros2_control>
+  </ros2_control> -->
   
   <!-- SENSORS -->
   <!-- RGBD CAMERA -->
@@ -404,7 +404,7 @@
 
   <gazebo>
     <!-- Ackermann steering plugin -->
-    <!-- <plugin
+    <plugin
       filename="gz-sim-ackermann-steering-system"
       name="gz::sim::systems::AckermannSteering">
       <left_joint>$(arg ns)/rear_left_wheel_joint</left_joint>
@@ -422,11 +422,11 @@
       <max_acceleration>10</max_acceleration>
       <topic>$(arg ns)/cmd_vel</topic>
       <odom_topic>encoder</odom_topic>
-    </plugin> -->
-
-    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
     </plugin>
+
+    <!-- <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find robot_description)/config/ackermann_controller.yaml</parameters>
+    </plugin> -->
 
     <!-- World odometry plugin (by default, odometry topic is used) -->
     <plugin filename="ignition-gazebo-odometry-publisher-system"

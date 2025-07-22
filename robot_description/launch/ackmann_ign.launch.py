@@ -164,6 +164,8 @@ def generate_launch_description():
             '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '@ignition.msgs.Image',
             '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '@ignition.msgs.Odometry',
             '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
+            '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
+            '/world/warehouse/model/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
             '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + '@ignition.msgs.Twist',
             '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '@ignition.msgs.LaserScan'
             
@@ -176,6 +178,7 @@ def generate_launch_description():
         remappings=[ 
             ('/ackmann/tf', '/tf'),
             ('/ackmann/odom', '/odom'),
+            ('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
     ) 
 
@@ -197,9 +200,6 @@ def generate_launch_description():
         ]
     )
 
-    control_params_file = PathJoinSubstitution(
-        [pkg_controller, 'config', 'ackermann_controller.yaml'])
-    
     ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
@@ -214,6 +214,8 @@ def generate_launch_description():
         )
     )
     """
+    control_params_file = PathJoinSubstitution(
+        [pkg_controller, 'config', 'ackermann_controller.yaml'])
     ackermann_controller_node = Node(
         package='controller_manager',
         executable='spawner',
@@ -295,11 +297,11 @@ def generate_launch_description():
     ld.add_action(ignition_gazebo)
     ld.add_action(clock_bridge)
     ld.add_action(robot_state_publisher)
-    ld.add_action(joint_state_publisher)
+    #ld.add_action(joint_state_publisher)
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
-    ld.add_action(ros2_controller_callback)
+    #ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
     #ld.add_action(nav2)
