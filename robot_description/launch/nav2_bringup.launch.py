@@ -38,7 +38,7 @@ ARGUMENTS = [
                           default_value=PathJoinSubstitution([
                               get_package_share_directory('robot_description'),
                               'config',
-                              'nav2.yaml'
+                              'nav2_params.yaml'
                               ]),
                           description='Nav2 parameters'),
     DeclareLaunchArgument('namespace', default_value='',

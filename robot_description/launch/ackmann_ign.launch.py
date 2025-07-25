@@ -59,7 +59,7 @@ def generate_launch_description():
     slam_launch = PathJoinSubstitution(
         [pkg_turtlebot4_navigation, 'launch', 'slam.launch.py'])
     nav2_launch = PathJoinSubstitution(
-        [pkg_turtlebot4_navigation, 'launch', 'nav2.launch.py'])
+        [pkg_robot_ignition_bringup, 'launch', 'nav2_bringup.launch.py'])
     
     # Set ignition resource path
     ign_resource_path = SetEnvironmentVariable(
@@ -158,16 +158,16 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[             # ign topic -t <topic_name> --info
-            '/ackmann/depth_camera/camera_info' + '@sensor_msgs/msg/CameraInfo' + '@ignition.msgs.CameraInfo',
-            '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '@ignition.msgs.PointCloudPacked',
-            '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '@ignition.msgs.Image',
-            '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '@ignition.msgs.Image',
-            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '@ignition.msgs.Odometry',
+            '/ackmann/depth_camera/camera_info' + '@sensor_msgs/msg/CameraInfo' + '[ignition.msgs.CameraInfo',
+            '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
+            '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
             '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
-            '/world/warehouse/model/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
-            '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + '@ignition.msgs.Twist',
-            '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '@ignition.msgs.LaserScan'
+            #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
+            '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + ']ignition.msgs.Twist',
+            '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan'
             
         ],
         parameters=[{
@@ -272,7 +272,6 @@ def generate_launch_description():
         launch_arguments=[
             ('namespace', ''),
             ('use_sim_time', LaunchConfiguration('use_sim_time')),
-            ('slam', LaunchConfiguration('slam')),
             ('localization', LaunchConfiguration('localization')),
             ('autostart', 'true'),
             ('params_file', PathJoinSubstitution(
@@ -304,6 +303,6 @@ def generate_launch_description():
     ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
-    #ld.add_action(nav2)
+    ld.add_action(nav2)
     ld.add_action(rviz)
     return ld

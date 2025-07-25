@@ -40,6 +40,10 @@ ARGUMENTS = [
             description='Launch rtabmap in localization mode (a map should have been already created).'),
         
         DeclareLaunchArgument(
+            'vision', default_value='true', choices=['true', 'false'],
+            description='Using vision odometry or icp odometry.'),
+        
+        DeclareLaunchArgument(
             'rtabmap_viz', default_value='true', choices=['true', 'false'],
             description='Launch rtabmap_viz for visualization.'),
 ]
@@ -48,40 +52,42 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     localization = LaunchConfiguration('localization')
+    vision = LaunchConfiguration('vision')
     rtabmap_viz = LaunchConfiguration('rtabmap_viz')
 
-    icp_parameters={
-          'odom_frame_id':'icp_odom',
-          'guess_frame_id':'odom'
-    }
-
     rtabmap_parameters={
-          'subscribe_rgbd':True,
-          'subscribe_scan':True,
-          'use_action_for_goal':True,
-          'odom_sensor_sync': True,
-          # RTAB-Map's parameters should be strings:
-          'Mem/NotLinkedNodesKept':'false'
+        'subscribe_rgbd':True,
+        'subscribe_scan':False,
+        'use_action_for_goal':True,
+        'odom_sensor_sync': True,
+        # RTAB-Map's parameters should be strings:
+        'Mem/NotLinkedNodesKept':'false',
+        'Grid/MaxGroundHeight': '0.2',
+        'Grid/MaxObstacleHeight': '0.8',
+        'Grid/NormalsSegmentation': 'true',
+        'Grid/RangeMax': '20',
+        'Grid/3D': 'false',
+        'Grid/RayTracing': 'true'
     }
 
     # Shared parameters between different nodes
     shared_parameters={
-          'frame_id':'ackmann/base_footprint',
-          'use_sim_time':use_sim_time,
-          # RTAB-Map's parameters should be strings:
-          'Reg/Strategy':'1',
-          'Reg/Force3DoF':'true',
-          'Mem/NotLinkedNodesKept':'false',
-          'Icp/PointToPlaneMinComplexity':'0.04' # to be more robust to long corridors with low geometry
+        'frame_id':'ackmann/base_footprint',
+        'use_sim_time':use_sim_time,
+        # RTAB-Map's parameters should be strings:
+        'Reg/Strategy':'1',
+        'Reg/Force3DoF':'true',
+        'Mem/NotLinkedNodesKept':'false',
+        'Icp/PointToPlaneMinComplexity':'0.04' # to be more robust to long corridors with low geometry
     }
 
     remappings=[
-          ('scan', '/scan'),
-          ('odom', '/odom'),
-          ('rgb/image', '/ackmann/depth_camera/image'),
-          ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
-          ('depth/image', '/ackmann/depth_camera/depth_image'),
-          ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
+        ('scan', '/scan'),
+        ('odom', 'vo_odom'),
+        ('rgb/image', '/ackmann/depth_camera/image'),
+        ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
+        ('depth/image', '/ackmann/depth_camera/depth_image'),
+        ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
     
     # Nodes to launch
     rgbd_sync = Node(
@@ -89,7 +95,41 @@ def generate_launch_description():
         parameters=[{'approx_sync':False, 'use_sim_time':use_sim_time}],
         remappings=remappings)
 
+    visual_odom_parameters = {
+        'frame_id': 'ackmann/base_footprint',
+        'odom_frame_id': 'vo_odom',
+        'guess_frame_id': 'ackmann/odom',
+        'publish_tf': True,
+        'use_sim_time': use_sim_time,
+        'Odom/Strategy': '0',  # Frame-to-Map visual odometry
+        'Vis/MinInliers': '10',  # Minimum inliers for robust matching
+        'Vis/FeatureType': '6',  # ORB features (6), robust for visual odometry
+        'Vis/MaxFeatures': '1000',  # Max features to detect
+        'Vis/EstimationType': '1',  # 3D->2D (PnP) for 2D navigation
+        'Vis/MaxDepth': '20.0',  # Max depth for point cloud
+        'Odom/GuessMotion': 'true',  # Use motion model for better initial guess
+        'Odom/GuessSmoothingDelay': '0.1',
+    }
+    visual_odom = Node(
+        condition=IfCondition(vision),
+        package='rtabmap_odom', executable='rgbd_odometry', output='screen',
+        parameters=[visual_odom_parameters],
+        remappings=remappings,
+        arguments=["--ros-args", "--log-level", 'rgbd_odometry:=warn'])
+    
+    # ICP Odometry node
+    # This node uses the ICP algorithm to estimate the odometry of the robot based on the depth images.
+    # It publishes the estimated odometry to the /icp_odom topic.
+    # It is used to provide an initial guess for the RTAB-Map SLAM algorithm
+    # and to provide a more accurate odometry estimate for the robot.
+    # It is a part of the RTAB-Map SLAM framework.
+    icp_parameters={
+          'odom_frame_id':'icp_odom',
+          'guess_frame_id':'ackmann/odom',
+          'publish_tf': True,  # Add this
+    }
     icp_odom = Node(
+        condition=UnlessCondition(vision),
         package='rtabmap_odom', executable='icp_odometry', output='screen',
         parameters=[icp_parameters, shared_parameters],
         remappings=remappings,
@@ -121,6 +161,7 @@ def generate_launch_description():
     # rgbd to laserscan node 
     # This node converts depth images to laser scans, which can be used for navigation.
     depth_to_scan = Node(
+        #condition=UnlessCondition(vision),
         package='depthimage_to_laserscan',
         executable='depthimage_to_laserscan_node',
         name='rgbd_to_scan',
@@ -131,7 +172,7 @@ def generate_launch_description():
             'output_frame': 'ackmann/base_footprint',
             'angle_min': -3.1415,       # -π radians
             'angle_max': 3.1415,        # π radians
-            'angle_increment': 0.0175,  # ~1 degree resolution
+            'angle_increment': 0.0087,  # ~1 degree resolution
         }],
         remappings=[
             ('depth', '/ackmann/depth_camera/depth_image'),
@@ -145,13 +186,13 @@ def generate_launch_description():
     rgbd_to_points = Node(
         package='rtabmap_util', executable='point_cloud_xyz', output='screen',
         parameters=[{'decimation': 2,
-                     'max_depth': 3.0,
+                     'max_depth': 20.0,
                      'voxel_size': 0.02}],
         remappings=remappings)
     
     # Second, we segment the floor from the obstacles.
     parameters={
-          'frame_id':'base_footprint',
+          'frame_id':'ackmann/base_footprint',
           'use_sim_time':use_sim_time,
           'subscribe_depth':True,
           'use_action_for_goal':True,
@@ -159,9 +200,9 @@ def generate_launch_description():
           'Grid/RayTracing':'true', # Fill empty space
           'Grid/3D':'false', # Use 2D occupancy
           'Grid/RangeMax':'3',
-          'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
-          'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
-          'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
+          'Grid/NormalsSegmentation':'true', # Use passthrough filter to detect obstacles
+          'Grid/MaxGroundHeight':'0.1', # All points above 5 cm are obstacles
+          'Grid/MaxObstacleHeight':'0.8',  # All points over 1 meter are ignored
           'Optimizer/GravitySigma':'0' # Disable imu constraints (we are already in 2D)
     }
 
@@ -174,8 +215,9 @@ def generate_launch_description():
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(rgbd_sync)
-    #ld.add_action(icp_odom)
     ld.add_action(depth_to_scan)
+    ld.add_action(visual_odom)
+    ld.add_action(icp_odom)
     #ld.add_action(rgbd_to_points)
     #ld.add_action(obstacle_detection)
     ld.add_action(slam)

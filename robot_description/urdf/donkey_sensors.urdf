@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot name="ackmann" xmlns:xacro="http://ros.org/wiki/xacro"> 
-  
+  <xacro:include filename="$(find robot_description)/urdf/sensors/common_properties.urdf.xacro" />
+  <xacro:include filename="$(find robot_description)/urdf/sensors/rplidar.urdf.xacro" />
+
   <xacro:property name="package_name" value="rebot_description"/>
   <xacro:property name="PI" value="3.14159265"/>
   
@@ -10,6 +12,10 @@
   <xacro:property name="wheel_thickness" value="0.024"/>
   <xacro:property name="base_elevation" value="0.01"/>
 
+  <xacro:property name="rplidar_x_offset" value="${-4*cm2m}"/>
+  <xacro:property name="rplidar_y_offset" value="${0*cm2m}"/>
+  <xacro:property name="rplidar_z_offset" value="${15*cm2m}"/>
+
   <xacro:arg name="base_color"    default="1.0 0.0 0.0 1.0"/>
   <xacro:arg name="ns"    default="ackmann"/>
   
@@ -18,7 +24,7 @@
     <color rgba="0.4 0.4 0.4 1.0"/>
   </material>
   
-    <xacro:macro name="inertial_cuboid_with_pose" params="mass x y z *origin">
+  <xacro:macro name="inertial_cuboid_with_pose" params="mass x y z *origin">
     <inertial>
       <mass value="${mass}" />
       <xacro:insert_block name="origin"/>
@@ -403,12 +409,17 @@
         <optical_frame_id>${l515_name}_depth_optical_frame</optical_frame_id>
       </camera>
       <always_on>1</always_on>
-      <update_rate>10</update_rate>
+      <update_rate>30</update_rate>
       <visualize>1</visualize>
       <topic>$(arg ns)/depth_camera</topic>
     </sensor>
     
   </gazebo>
+
+  <xacro:rplidar name="rplidar" parent_link="$(arg ns)/base_link" gazebo="ignition">
+    <origin xyz="${rplidar_x_offset} ${rplidar_y_offset} ${rplidar_z_offset}"
+            rpy="0 0 0"/>
+  </xacro:rplidar>
 
   <gazebo>
     <!-- Ackermann steering plugin -->
@@ -456,6 +467,10 @@
     <plugin
       filename="gz-sim-joint-state-publisher-system"
       name="gz::sim::systems::JointStatePublisher">
+      <ros>
+        <namespace>$(arg ns)</namespace>
+      </ros>
+      <topic>joint_states</topic>
     </plugin>
   </gazebo>
 
