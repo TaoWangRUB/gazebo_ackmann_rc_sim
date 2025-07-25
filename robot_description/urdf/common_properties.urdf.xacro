@@ -93,6 +93,8 @@
     <xacro:if value="${gazebo == 'ignition'}">
       <sensor name="${sensor_name}" type="gpu_lidar">
         <update_rate>${update_rate}</update_rate>
+        <ignition_frame_id>${sensor_name}_link</ignition_frame_id>
+        <topic>/scan</topic>
         <visualize>${visualize}</visualize>
         <always_on>true</always_on>
         <lidar>

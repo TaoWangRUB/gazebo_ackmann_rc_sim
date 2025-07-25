@@ -40,7 +40,7 @@ ARGUMENTS = [
             description='Launch rtabmap in localization mode (a map should have been already created).'),
         
         DeclareLaunchArgument(
-            'vision', default_value='true', choices=['true', 'false'],
+            'vision', default_value='false', choices=['true', 'false'],
             description='Using vision odometry or icp odometry.'),
         
         DeclareLaunchArgument(
@@ -57,12 +57,12 @@ def generate_launch_description():
 
     rtabmap_parameters={
         'subscribe_rgbd':True,
-        'subscribe_scan':False,
+        'subscribe_scan':True,
         'use_action_for_goal':True,
         'odom_sensor_sync': True,
         # RTAB-Map's parameters should be strings:
         'Mem/NotLinkedNodesKept':'false',
-        'Grid/MaxGroundHeight': '0.2',
+        'Grid/MaxGroundHeight': '0.1',
         'Grid/MaxObstacleHeight': '0.8',
         'Grid/NormalsSegmentation': 'true',
         'Grid/RangeMax': '20',
@@ -83,7 +83,7 @@ def generate_launch_description():
 
     remappings=[
         ('scan', '/scan'),
-        ('odom', 'vo_odom'),
+        ('odom', '/vo_odom'),
         ('rgb/image', '/ackmann/depth_camera/image'),
         ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
         ('depth/image', '/ackmann/depth_camera/depth_image'),
@@ -124,9 +124,17 @@ def generate_launch_description():
     # and to provide a more accurate odometry estimate for the robot.
     # It is a part of the RTAB-Map SLAM framework.
     icp_parameters={
-          'odom_frame_id':'icp_odom',
-          'guess_frame_id':'ackmann/odom',
-          'publish_tf': True,  # Add this
+        'odom_frame_id':'icp_odom',
+        'guess_frame_id':'ackmann/odom',
+        'publish_tf': True,  # Add this
+        'Icp/CorrespondenceRatio': '0.03',  # Further relax from 0.05
+        'Icp/PointToPlaneMinComplexity': '0.01',  # Lower for corridors
+        'Icp/MaxCorrespondenceDistance': '0.2',  # Increase from 0.1
+        'Icp/VoxelSize': '0.05',  # Enable voxel filtering
+        'Icp/MaxTranslation': '1.0',  # Allow larger translation
+        'Icp/MaxRotation': '1.0',  # Allow larger rotation
+        'Odom/GuessSmoothingDelay': '0.3',  # Increase smoothing
+        'Odom/GuessMotion': 'true',
     }
     icp_odom = Node(
         condition=UnlessCondition(vision),
@@ -161,7 +169,7 @@ def generate_launch_description():
     # rgbd to laserscan node 
     # This node converts depth images to laser scans, which can be used for navigation.
     depth_to_scan = Node(
-        #condition=UnlessCondition(vision),
+        condition=IfCondition(vision),
         package='depthimage_to_laserscan',
         executable='depthimage_to_laserscan_node',
         name='rgbd_to_scan',
