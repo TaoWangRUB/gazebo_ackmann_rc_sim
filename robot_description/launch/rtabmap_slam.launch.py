@@ -25,7 +25,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
 
@@ -40,7 +40,7 @@ ARGUMENTS = [
             description='Launch rtabmap in localization mode (a map should have been already created).'),
         
         DeclareLaunchArgument(
-            'vision', default_value='false', choices=['true', 'false'],
+            'vision', default_value='true', choices=['true', 'false'],
             description='Using vision odometry or icp odometry.'),
         
         DeclareLaunchArgument(
@@ -54,10 +54,20 @@ def generate_launch_description():
     localization = LaunchConfiguration('localization')
     vision = LaunchConfiguration('vision')
     rtabmap_viz = LaunchConfiguration('rtabmap_viz')
+    
+    # Define odom topic based on vision
+    odom_topic = PythonExpression([
+        '"/vo_odom" if "', LaunchConfiguration('vision'), '" == "true" else "/icp_odom"'
+    ])
+
+    # Define subscribe_scan based on vision (True when vision is false)
+    subscribe_scan = PythonExpression([
+        'True if "', LaunchConfiguration('vision'), '" == "false" else False'
+    ])
 
     rtabmap_parameters={
         'subscribe_rgbd':True,
-        'subscribe_scan':True,
+        'subscribe_scan':subscribe_scan,
         'use_action_for_goal':True,
         'odom_sensor_sync': True,
         # RTAB-Map's parameters should be strings:
@@ -83,7 +93,7 @@ def generate_launch_description():
 
     remappings=[
         ('scan', '/scan'),
-        ('odom', '/vo_odom'),
+        ('odom', odom_topic),
         ('rgb/image', '/ackmann/depth_camera/image'),
         ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
         ('depth/image', '/ackmann/depth_camera/depth_image'),

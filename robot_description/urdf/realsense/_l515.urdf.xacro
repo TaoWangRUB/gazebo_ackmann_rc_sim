@@ -92,8 +92,6 @@ aluminum peripherial evaluation case.
         </geometry>
       </collision>
       <inertial>
-        <!-- The following are not reliable values, and should not be used for modeling -->
-        <!-- calculated assuming full cylinder as described here: https://en.wikipedia.org/wiki/List_of_moments_of_inertia -->
         <mass value="0.095" />
         <origin xyz="0 0 0" />
         <inertia ixx="0.000044" ixy="0.0" ixz="0.0" iyy="0.000027" iyz="0.0" izz="0.000027" />
