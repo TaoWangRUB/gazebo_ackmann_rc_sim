@@ -40,7 +40,7 @@ ARGUMENTS = [
             description='Launch rtabmap in localization mode (a map should have been already created).'),
         
         DeclareLaunchArgument(
-            'vision', default_value='true', choices=['true', 'false'],
+            'vision', default_value='false', choices=['true', 'false'],
             description='Using vision odometry or icp odometry.'),
         
         DeclareLaunchArgument(
@@ -64,6 +64,10 @@ def generate_launch_description():
     subscribe_scan = PythonExpression([
         'True if "', LaunchConfiguration('vision'), '" == "false" else False'
     ])
+    # Define scan topic based on vision (True when vision is false)
+    scan_topic = PythonExpression([
+        '"/scan" if "', LaunchConfiguration('vision'), '" == "false" else "/scan"'
+    ])
 
     rtabmap_parameters={
         'subscribe_rgbd':True,
@@ -72,12 +76,12 @@ def generate_launch_description():
         'odom_sensor_sync': True,
         # RTAB-Map's parameters should be strings:
         'Mem/NotLinkedNodesKept':'false',
-        'Grid/MaxGroundHeight': '0.1',
-        'Grid/MaxObstacleHeight': '0.8',
-        'Grid/NormalsSegmentation': 'true',
-        'Grid/RangeMax': '20',
-        'Grid/3D': 'false',
-        'Grid/RayTracing': 'true'
+        #'Grid/MaxGroundHeight': '0.1',
+        #'Grid/MaxObstacleHeight': '0.8',
+        #'Grid/NormalsSegmentation': 'true',
+        #'Grid/RangeMax': '20',
+        #'Grid/3D': 'false',
+        #'Grid/RayTracing': 'true'
     }
 
     # Shared parameters between different nodes
@@ -92,7 +96,7 @@ def generate_launch_description():
     }
 
     remappings=[
-        ('scan', '/scan'),
+        ('scan', scan_topic),
         ('odom', odom_topic),
         ('rgb/image', '/ackmann/depth_camera/image'),
         ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),

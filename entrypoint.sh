@@ -5,6 +5,7 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 export TURTLEBOT3_MODEL=waffle
 
+export CYCLONEDDS_URI=file:///workspace/install/robot_description/share/robot_description/config/cyclonedds_config.xml
 # Initialize environment
 source /opt/ros/humble/setup.bash
 

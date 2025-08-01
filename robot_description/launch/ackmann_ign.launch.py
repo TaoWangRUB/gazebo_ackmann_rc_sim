@@ -167,7 +167,7 @@ def generate_launch_description():
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
             '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + ']ignition.msgs.Twist',
-            '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan'
+            '/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan'
             
         ],
         parameters=[{
