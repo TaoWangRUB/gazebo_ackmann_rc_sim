@@ -167,7 +167,7 @@ def generate_launch_description():
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
             '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + ']ignition.msgs.Twist',
-            '/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan'
+            '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan'
             
         ],
         parameters=[{
@@ -181,6 +181,20 @@ def generate_launch_description():
             #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
     ) 
+
+    # Scan clipper node
+    scan_clipper_node = Node(
+        package='robot_description',
+        executable='scan_clipper.py',
+        name='scan_clipper',
+        output='screen',
+        parameters=[{
+            #'max_range': LaunchConfiguration('max_range'),
+            #'min_range': LaunchConfiguration('min_range'),
+            'input_topic': "/rplidar/scan",
+            'output_topic': "/scan",
+        }],
+    )
 
     # Static transform publisher for depth camera
     tf_pub = Node(
@@ -300,6 +314,7 @@ def generate_launch_description():
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
+    ld.add_action(scan_clipper_node)
     ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)

@@ -40,7 +40,7 @@ ARGUMENTS = [
             description='Launch rtabmap in localization mode (a map should have been already created).'),
         
         DeclareLaunchArgument(
-            'vision', default_value='false', choices=['true', 'false'],
+            'vision', default_value='true', choices=['true', 'false'],
             description='Using vision odometry or icp odometry.'),
         
         DeclareLaunchArgument(
@@ -76,12 +76,12 @@ def generate_launch_description():
         'odom_sensor_sync': True,
         # RTAB-Map's parameters should be strings:
         'Mem/NotLinkedNodesKept':'false',
-        #'Grid/MaxGroundHeight': '0.1',
-        #'Grid/MaxObstacleHeight': '0.8',
-        #'Grid/NormalsSegmentation': 'true',
-        #'Grid/RangeMax': '20',
-        #'Grid/3D': 'false',
-        #'Grid/RayTracing': 'true'
+        'Grid/MaxGroundHeight': '0.1',
+        'Grid/MaxObstacleHeight': '0.8',
+        'Grid/NormalsSegmentation': 'true',
+        'Grid/RangeMax': '20',
+        'Grid/3D': 'false',
+        'Grid/RayTracing': 'true'
     }
 
     # Shared parameters between different nodes
