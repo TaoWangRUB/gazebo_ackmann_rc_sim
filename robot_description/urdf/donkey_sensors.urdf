@@ -369,6 +369,7 @@
     <xacro:inertial_dummy/>
   </link> -->
 
+  <!-- Depth camera sensor -->
   <gazebo reference="${l515_name}_depth_frame">
     <sensor name="rgbd_camera" type="rgbd_camera">
       <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
@@ -390,8 +391,31 @@
       <visualize>true</visualize>
       <topic>$(arg ns)/depth_camera</topic>
     </sensor>
-    
   </gazebo>
+  <!-- IMU sensor -->
+  <gazebo reference="${l515_name}_imu_optical_frame">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100.0</update_rate>
+      <visualize>false</visualize>
+      <topic>/imu/data</topic>
+      <ignition_frame_id>${l515_name}_imu_optical_frame</ignition_frame_id>
+      <imu>
+        <angular_velocity>
+          <x>true</x>
+          <y>true</y>
+          <z>true</z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>true</x>
+          <y>true</y>
+          <z>true</z>
+        </linear_acceleration>
+      </imu>
+      
+    </sensor>
+  </gazebo>
+
 
   <xacro:rplidar name="rplidar" parent_link="$(arg ns)/base_link" gazebo="ignition">
     <origin xyz="${rplidar_x_offset} ${rplidar_y_offset} ${rplidar_z_offset}"

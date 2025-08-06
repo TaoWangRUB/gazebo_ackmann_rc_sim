@@ -164,6 +164,7 @@ aluminum peripherial evaluation case.
       <link name="${name}_gyro_optical_frame" />
       <link name="${name}_accel_frame" />
       <link name="${name}_accel_optical_frame" />
+      <link name="${name}_imu_optical_frame" />
 
       <joint name="${name}_gyro_joint" type="fixed">
         <origin xyz = "${l515_cam_color_to_imu_px} ${l515_cam_color_to_imu_py} ${l515_cam_color_to_imu_pz}" rpy = "${l515_cam_color_to_imu_rx} ${l515_cam_color_to_imu_ry} ${l515_cam_color_to_imu_rz}" />
@@ -187,6 +188,12 @@ aluminum peripherial evaluation case.
         <origin xyz = "0 0 0" rpy = "${-M_PI/2} 0 ${-M_PI/2}" />
         <parent link="${name}_accel_frame" />
         <child link="${name}_accel_optical_frame" />
+      </joint>
+
+      <joint name="${name}_imu_optical_joint" type="fixed">
+        <origin xyz = "${l515_cam_color_to_imu_px} ${l515_cam_color_to_imu_py} ${l515_cam_color_to_imu_pz}" rpy = "${-M_PI/2} 0 ${-M_PI/2}" />
+        <parent link="${name}_link" />
+        <child link="${name}_imu_optical_frame" />
       </joint>
     </xacro:if>
     <xacro:if value="${add_plug}">
