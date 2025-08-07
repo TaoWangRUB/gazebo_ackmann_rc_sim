@@ -24,6 +24,7 @@ RUN apt-get update && \
     ros-humble-realsense2* \
     ros-humble-rtabmap \
     ros-humble-rtabmap-ros \
+    ros-humble-robot-localization \
     ros-humble-rmw-cyclonedds-cpp && \
     rm -rf /var/lib/apt/lists/*
 

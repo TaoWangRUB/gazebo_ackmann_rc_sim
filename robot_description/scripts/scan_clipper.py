@@ -48,9 +48,9 @@ class ScanClipper(Node):
         ranges = np.clip(ranges, self.min_range, self.max_range)
         
         # Update message
-        msg.ranges = ranges.tolist()
-        msg.range_min = self.min_range
-        msg.range_max = self.max_range
+        #msg.ranges = ranges.tolist()
+        #msg.range_min = self.min_range
+        #msg.range_max = self.max_range
         
         # Publish filtered scan
         self.publisher.publish(msg)
