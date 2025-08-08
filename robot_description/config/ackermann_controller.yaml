@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 10
+    update_rate: 50
     use_sim_time: true
 
     joint_state_broadcaster:
@@ -41,12 +41,12 @@ ackermann_steering_controller:
 
     open_loop: false
     publish_rate: 50.0
-    enable_odom_tf: false
-    publish_odom: false
+    enable_odom_tf: true
+    publish_odom: true
     publish_odom_tf: false
     
     # cmd_vel_topic: /ackmann/cmd_vel
-    odom_topic: /odom
+    odom_topic: /encoder/odom
     tf_topic: /ackmann/tf
     odom_frame_id: odom
     base_frame_id: ackmann/base_footprint

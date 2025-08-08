@@ -206,7 +206,7 @@ def generate_launch_description():
     )
     parameters=[{
           'frame_id':'ackmann/base_footprint',
-          'publish_tf': True,
+          'publish_tf': False,
           'subscribe_depth':True,
           #'subscribe_odom_info':True,
           'approx_sync':True,
@@ -216,7 +216,7 @@ def generate_launch_description():
           }]
 
     remappings=[
-          #('imu', 'l515/imu/raw'),
+          ('imu', 'l515/imu/raw'),
           ('rgb/image', '/ackmann/depth_camera/image'),
           ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
@@ -248,7 +248,7 @@ def generate_launch_description():
                  "odom0_queue_size": 10,
                  "odom0_nodelay": False,
                  "odom0_differential": False,
-                 "odom0_relative": False,
+                 "odom0_relative": True,
                  #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
                  #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
                  "imu0": "l515/imu/raw",

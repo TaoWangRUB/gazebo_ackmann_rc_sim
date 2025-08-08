@@ -113,7 +113,7 @@ def generate_launch_description():
     ld.add_action(ackmann_controller_callback)
     # ld.add_action(controller_manager)
     ld.add_action(joint_state_controller_node)
-    ld.add_action(tf_namespaced_odom_publisher)
-    ld.add_action(tf_namespaced_base_link_publisher)
+    #ld.add_action(tf_namespaced_odom_publisher)
+    #ld.add_action(tf_namespaced_base_link_publisher)
 
     return ld
