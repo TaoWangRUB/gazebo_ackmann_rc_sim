@@ -2,7 +2,7 @@ import os, xacro
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
@@ -204,6 +204,11 @@ def generate_launch_description():
             on_exit=[ros2_controller],
         )
     )
+    # Add delayed controller spawning
+    delayed_controller_spawning = TimerAction(
+        period=3.0,
+        actions=[ros2_controller_callback]
+    )
     parameters=[{
           'frame_id':'ackmann/base_footprint',
           'publish_tf': False,
@@ -308,6 +313,7 @@ def generate_launch_description():
     ld.add_action(tf_pub)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
+    #ld.add_action(delayed_controller_spawning)  # Add delay
     #ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
