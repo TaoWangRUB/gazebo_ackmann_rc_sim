@@ -14,6 +14,7 @@ endif()
 # Install Python scripts
 install(PROGRAMS
   scripts/scan_clipper.py
+  scripts/imu_covariance_injector.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

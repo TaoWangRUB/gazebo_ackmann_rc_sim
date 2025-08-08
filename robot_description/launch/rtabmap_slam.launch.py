@@ -123,13 +123,20 @@ def generate_launch_description():
             name='ekf_filter_node',
             output='screen',
             parameters=[control_params_file,
-                {"frequency": 50.0,
+                {"frequency": 30.0,
                  "predict_to_current_time": True,
+                 "use_sim_time": use_sim_time,
                  "publish_tf": True,
                  "map_frame": "map",                # Defaults to "map" if unspecified
                  "odom_frame": "odom",           # Defaults to "odom" if unspecified
                  "base_link_frame": "ackmann/base_footprint",    # Defaults to "base_link" if unspecified
                  "world_frame": "odom",             # Defaults to the value of odom_frame if unspecified
+                 
+                 # Additional stability parameters
+                "sensor_timeout": 0.2,  # Wait for sensor data
+                "transform_timeout": 0.1,
+                "transform_time_offset": 0.0,
+
                  "odom0": "/vo_odom",
                  "odom0_config": [True, True, False,    # x, y, z position
                                   False, False, True,     # roll, pitch, yaw
@@ -138,10 +145,12 @@ def generate_launch_description():
                                   False, False, False], # x, y, z acceleration
                  "odom0_queue_size": 10,
                  "odom0_nodelay": False,
+                 "odom0_differential": False,
+                 
                  # IMU Configuration  
                 "imu0": "/l515/imu/data",
                 "imu0_config": [False, False, False,   # x, y, z position
-                                True,  True,  True,    # roll, pitch, yaw
+                                True,  True,  False,    # roll, pitch, yaw
                                 False, False, False,   # x, y, z velocity
                                 True,  True,  True,    # roll, pitch, yaw rates
                                 True,  True,  True],   # x, y, z acceleration
@@ -150,20 +159,18 @@ def generate_launch_description():
                  "odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
                  "odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
                  # OVERRIDE zero covariances from Gazebo
-                "imu0_pose_covariance": [0.1, 0.0, 0.0, 0.0, 0.0, 0.0,
-                                        0.0, 0.1, 0.0, 0.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.0, 0.01, 0.0, 0.0,  # Lower noise for sim
-                                        0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
-                                        0.0, 0.0, 0.0, 0.0, 0.0, 0.01],
                 
                 "imu0_angular_velocity_covariance": [0.001, 0.0, 0.0,
-                                                    0.0, 0.001, 0.0,
-                                                    0.0, 0.0, 0.001],
-                
+                                                     0.0, 0.001, 0.0,
+                                                     0.0, 0.0, 0.001],
+
                 "imu0_linear_acceleration_covariance": [0.01, 0.0, 0.0,
                                                         0.0, 0.01, 0.0,
                                                         0.0, 0.0, 0.01],
+
+                "imu0_orientation_covariance": [0.01, 0.0, 0.0,
+                                                0.0, 0.01, 0.0,
+                                                0.0, 0.0, 0.01],
                 
                 # Gazebo-specific settings
                 "imu0_differential": False,
@@ -195,7 +202,7 @@ def generate_launch_description():
     visual_odom_parameters = {
         'frame_id': 'ackmann/base_footprint',
         'odom_frame_id': 'vo_odom',
-        'guess_frame_id': 'ackmann/odom',
+        #'guess_frame_id': 'ackmann/base_footprint',
         'publish_tf': True,
         'use_sim_time': use_sim_time,
         'Odom/Strategy': '0',  # Frame-to-Map visual odometry
@@ -321,10 +328,10 @@ def generate_launch_description():
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(rgbd_sync)
     ld.add_action(depth_to_scan)
-    ld.add_action(ekf_filter_node)
     #ld.add_action(imu_filter_node)
     ld.add_action(visual_odom)
     ld.add_action(icp_odom)
+    ld.add_action(ekf_filter_node)
     #ld.add_action(rgbd_to_points)
     #ld.add_action(obstacle_detection)
     ld.add_action(slam)
