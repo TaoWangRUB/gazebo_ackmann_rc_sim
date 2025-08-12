@@ -260,16 +260,18 @@ def generate_launch_description():
                  #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
                  "imu0": "l515/imu/raw",
                  "imu0_config": [False, False, False,    # position (disable all)
-                                 False, False, False,      # orientation (only yaw)
+                                 False, False, True,      # orientation (only yaw)
                                  False, False, False,     # linear velocity (disable all)
-                                 True, True, True,      # angular velocity (only yaw)
-                                 True, True, True],      # linear acceleration (x, y only)
+                                 False, False, True,      # angular velocity (only yaw)
+                                 True, True, False],      # linear acceleration (x, y only)
                  "imu0_queue_size": 10,
                  "imu0_nodelay": False,
                  "imu0_differential": False,
                  "imu0_relative": True,  # Important for IMU
                  "imu0_remove_gravitational_acceleration": True,
-                 "imu0_noise": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]  # Higher noise for IMU
+                 "imu0_noise": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],  # Higher noise for IMU
+                 "angular_velocity_covariance": [0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01],
+                 "linear_acceleration_covariance": [0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1],
                 }])
            
     # Compute quaternion of the IMU
@@ -336,7 +338,7 @@ def generate_launch_description():
     #ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
-    ld.add_action(slam_node)
+    #ld.add_action(slam_node)
     ld.add_action(ros2_controller_callback)
     ld.add_action(rviz)
     return ld
