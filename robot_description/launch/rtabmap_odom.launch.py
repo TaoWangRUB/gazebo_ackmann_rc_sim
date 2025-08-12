@@ -232,6 +232,7 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node',
             output='screen',
+
             parameters=[#os.path.join(pkg_robot_ignition_bringup, 'config', 'ekf.yaml'),
                 {"frequency": 30.0,
                  "predict_to_current_time": True,
@@ -240,6 +241,7 @@ def generate_launch_description():
                  "transform_timeout": 0.2,  
                  "publish_tf": True,
                  "two_d_mode": True,  # CRITICAL: Enable 2D mode
+                 "use_sim_time": LaunchConfiguration('use_sim_time'),
                  "map_frame": "map",                # Defaults to "map" if unspecified
                  "odom_frame": "odom",              # Defaults to "odom" if unspecified
                  "base_link_frame": "ackmann/base_footprint",  # Defaults to "base_link" if unspecified
@@ -289,12 +291,29 @@ def generate_launch_description():
             remappings=remappings)
     
     slam_node = Node(
-            package='rtabmap_slam', 
-            executable='rtabmap', 
-            output='screen',
-            parameters=parameters,
-            remappings=remappings,
-            arguments=['-d'])
+        package='rtabmap_slam', 
+        executable='rtabmap', 
+        output='screen',
+        parameters=parameters + [
+            {'frame_id': 'ackmann/base_footprint'},
+            {'odom_frame': 'odom'},
+            {'base_frame': 'ackmann/base_footprint'},
+            {'map_frame': 'map'},
+            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            {'publish_tf': True},
+            {'publish_map_tf': True},
+            {'publish_odom_tf': False},
+            {'wait_for_transform': 0.2},
+            {'wait_for_odom_to_init': True},
+            {'approx_sync': True},
+            {'approx_sync_max_interval': 0.05},
+            {'localization': LaunchConfiguration('localization')}
+            # Add more parameters as needed
+        ],
+        remappings=remappings + [
+            ('odom', '/odometry/filtered'),
+        ],
+        arguments=['-d'])
     # Open RViz
     rviz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([rviz_launch]),
@@ -317,7 +336,7 @@ def generate_launch_description():
     #ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
-    #ld.add_action(slam_node)
+    ld.add_action(slam_node)
     ld.add_action(ros2_controller_callback)
     ld.add_action(rviz)
     return ld
