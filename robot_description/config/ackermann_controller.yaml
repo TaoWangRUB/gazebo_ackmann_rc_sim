@@ -61,8 +61,8 @@ ackermann_steering_controller:
     publish_odom_tf: false
     
     # cmd_vel_topic: /ackmann/cmd_vel
-    odom_topic: /encoder/odom
-    tf_topic: /ackmann/tf
+    odom_topic: /wheel/odom
+    tf_topic: /tf
     odom_frame_id: odom
     base_frame_id: ackmann/base_footprint
     
