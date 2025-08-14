@@ -336,6 +336,6 @@ def generate_launch_description():
     ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
-    #ld.add_action(nav2)
+    ld.add_action(nav2)
     ld.add_action(rviz)
     return ld
