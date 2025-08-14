@@ -210,18 +210,35 @@ def generate_launch_description():
         actions=[ros2_controller_callback]
     )
     parameters=[{
-          'frame_id':'ackmann/base_footprint',
+          'frame_id': 'ackmann/base_footprint',
+          'odom_frame': 'odom',
+          'base_frame': 'ackmann/base_footprint',
+          'map_frame': 'map',
           'publish_tf': False,
           'subscribe_depth':True,
           #'subscribe_odom_info':True,
           'approx_sync':True,
           'approx_sync_max_interval': 0.05,
-          #'wait_imu_to_init': True,
-          'use_sim_time': True,
-          }]
+          'wait_imu_to_init': True,
+          'wait_for_transform': 0.2,
+          'wait_for_odom_to_init': True,
+          'use_sim_time': LaunchConfiguration('use_sim_time'),
+          # RTAB-Map's parameters should be strings:
+          'Mem/NotLinkedNodesKept':'false',
+          'Grid/MaxGroundHeight': '0.1',        # Maximum height of ground points
+          'Grid/MaxObstacleHeight': '0.8',      # Maximum height of obstacle points
+          'Grid/NormalsSegmentation': 'true',   # Enable normals segmentation
+          'Grid/RangeMax': '20',                # Maximum range for point cloud processing
+          'Grid/3D': 'false',                   # Use 2D grid for navigation
+          'Grid/RayTracing': 'true',            # Enable ray tracing for better obstacle detection
+          'Reg/Strategy':'1',                   # Use 3D->2D visual odometry
+          'Reg/Force3DoF':'true',               # Force 3 DoF for 2D navigation
+          'Mem/NotLinkedNodesKept':'false',     # Do not keep not linked nodes
+          }
+    ]
 
     remappings=[
-          ('imu', 'l515/imu/raw'),
+          ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
           ('rgb/image', '/ackmann/depth_camera/image'),
           ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
@@ -232,6 +249,7 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node',
             output='screen',
+
             parameters=[#os.path.join(pkg_robot_ignition_bringup, 'config', 'ekf.yaml'),
                 {"frequency": 30.0,
                  "predict_to_current_time": True,
@@ -240,6 +258,7 @@ def generate_launch_description():
                  "transform_timeout": 0.2,  
                  "publish_tf": True,
                  "two_d_mode": True,  # CRITICAL: Enable 2D mode
+                 "use_sim_time": LaunchConfiguration('use_sim_time'),
                  "map_frame": "map",                # Defaults to "map" if unspecified
                  "odom_frame": "odom",              # Defaults to "odom" if unspecified
                  "base_link_frame": "ackmann/base_footprint",  # Defaults to "base_link" if unspecified
@@ -256,25 +275,57 @@ def generate_launch_description():
                  "odom0_relative": True,
                  #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
                  #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
-                 "imu0": "l515/imu/raw",
+                 "imu0": "imu/data", #"/l515/imu/raw",
                  "imu0_config": [False, False, False,    # position (disable all)
-                                 False, False, False,      # orientation (only yaw)
+                                 False, False, True,      # orientation (only yaw)
                                  False, False, False,     # linear velocity (disable all)
-                                 True, True, True,      # angular velocity (only yaw)
-                                 True, True, True],      # linear acceleration (x, y only)
+                                 False, False, True,      # angular velocity (only yaw)
+                                 False, False, False],      # linear acceleration (x, y only)
                  "imu0_queue_size": 10,
                  "imu0_nodelay": False,
                  "imu0_differential": False,
                  "imu0_relative": True,  # Important for IMU
                  "imu0_remove_gravitational_acceleration": True,
-                 "imu0_noise": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]  # Higher noise for IMU
-                }])
+                 # Process noise covariance (conservative values)
+                 "process_noise_covariance": [0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0.025, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0.025, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0.04, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.015],
+                 # Initial estimate covariance (diagonal matrix)
+                 "initial_estimate_covariance": [1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9]
+                            }]
+    )
            
     # Compute quaternion of the IMU
     imu_filter_node = Node(
             package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
             parameters=[{'use_mag': False, 
-                         'world_frame':'nwu', # ned, enu, nwu
+                         'world_frame':'enu', # ned, enu, nwu
                          #'yaw_offset': -1.5708,
                          'publish_tf':False,
                          #'fixed_frame': "camera_link"
@@ -285,16 +336,33 @@ def generate_launch_description():
             package='rtabmap_odom', 
             executable='rgbd_odometry', 
             output='screen',
-            parameters=parameters,
+            parameters=parameters + [
+                {'Odom/Strategy': '0'},             # Frame-to-Map visual odometry
+                {'Vis/MinInliers': '10'},           # Minimum inliers for robust matching
+                {'Vis/FeatureType': '6'},           # ORB features (6), robust for visual odometry
+                {'Vis/MaxFeatures': '1000'},        # Max features to detect
+                {'Vis/EstimationType': '1'},        # 3D->2D (PnP) for 2D navigation
+                {'Vis/MaxDepth': '20.0'},           # Max depth for point cloud
+                {'Odom/GuessMotion': 'true'},       # Use motion model for better initial guess
+                {'Odom/GuessSmoothingDelay': '0.1'},# Smoothing delay for guess motion
+            ],
             remappings=remappings)
     
     slam_node = Node(
-            package='rtabmap_slam', 
-            executable='rtabmap', 
-            output='screen',
-            parameters=parameters,
-            remappings=remappings,
-            arguments=['-d'])
+        package='rtabmap_slam', 
+        executable='rtabmap', 
+        output='screen',
+        parameters=parameters + [
+            {'publish_tf': True},
+            {'publish_map_tf': True},
+            #{'publish_odom_tf': True},
+            {'localization': LaunchConfiguration('localization')}
+            # Add more parameters as needed
+        ],
+        remappings=remappings + [
+            ('odom', '/odometry/filtered'),
+        ],
+        arguments=['-d'])
     # Open RViz
     rviz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([rviz_launch]),
@@ -314,10 +382,10 @@ def generate_launch_description():
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
     #ld.add_action(delayed_controller_spawning)  # Add delay
-    #ld.add_action(imu_filter_node)
+    ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
-    #ld.add_action(slam_node)
+    ld.add_action(slam_node)
     ld.add_action(ros2_controller_callback)
     ld.add_action(rviz)
     return ld

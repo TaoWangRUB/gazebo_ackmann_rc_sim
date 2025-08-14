@@ -74,7 +74,7 @@ def generate_launch_description():
         'subscribe_rgbd':True,
         'subscribe_scan':subscribe_scan,
         'use_action_for_goal':True,
-        'odom_sensor_sync': True,
+        'odom_sensor_sync': True,   
         # RTAB-Map's parameters should be strings:
         'Mem/NotLinkedNodesKept':'false',
         'Grid/MaxGroundHeight': '0.1',
@@ -90,8 +90,8 @@ def generate_launch_description():
         'frame_id':'ackmann/base_footprint',
         'use_sim_time':use_sim_time,
         # RTAB-Map's parameters should be strings:
-        'Reg/Strategy':'1',
-        'Reg/Force3DoF':'true',
+        'Reg/Strategy':'1',     # 1: 3D->2D (PnP) for 2D navigation
+        'Reg/Force3DoF':'true', # Force 3 DoF (2D) registration
         'Mem/NotLinkedNodesKept':'false',
         'Icp/PointToPlaneMinComplexity':'0.04' # to be more robust to long corridors with low geometry
     }
@@ -99,6 +99,7 @@ def generate_launch_description():
     remappings=[
         ('scan', scan_topic),
         ('odom', odom_topic),
+        ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
         ('rgb/image', '/ackmann/depth_camera/image'),
         ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
         ('depth/image', '/ackmann/depth_camera/depth_image'),
@@ -109,101 +110,33 @@ def generate_launch_description():
         package='rtabmap_sync', executable='rgbd_sync', output='screen',
         parameters=[{'approx_sync':False, 'use_sim_time':use_sim_time}],
         remappings=remappings)
-
-    # EKF filter node for localization
-    # This node uses the Extended Kalman Filter to fuse odometry and IMU data.
-    # It publishes the estimated pose to the /odom topic.
-    # It is used to provide a more accurate pose estimate for the robot.
-    # It is a part of the robot_localization package.
-    pkg = get_package_share_directory('robot_description')
-    control_params_file = PathJoinSubstitution([pkg, 'config', 'ekf.yaml'])
-    ekf_filter_node = Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_filter_node',
-            output='screen',
-            parameters=[control_params_file,
-                {"frequency": 30.0,
-                 "predict_to_current_time": True,
-                 "use_sim_time": use_sim_time,
-                 "publish_tf": True,
-                 "map_frame": "map",                # Defaults to "map" if unspecified
-                 "odom_frame": "odom",           # Defaults to "odom" if unspecified
-                 "base_link_frame": "ackmann/base_footprint",    # Defaults to "base_link" if unspecified
-                 "world_frame": "odom",             # Defaults to the value of odom_frame if unspecified
-                 
-                 # Additional stability parameters
-                "sensor_timeout": 0.2,  # Wait for sensor data
-                "transform_timeout": 0.1,
-                "transform_time_offset": 0.0,
-
-                 "odom0": "/vo_odom",
-                 "odom0_config": [True, True, False,    # x, y, z position
-                                  False, False, True,     # roll, pitch, yaw
-                                  False, False, False,     # x, y, z velocity
-                                  False, False, False,     # roll, pitch, yaw rates
-                                  False, False, False], # x, y, z acceleration
-                 "odom0_queue_size": 10,
-                 "odom0_nodelay": False,
-                 "odom0_differential": False,
-                 
-                 # IMU Configuration  
-                "imu0": "/l515/imu/data",
-                "imu0_config": [False, False, False,   # x, y, z position
-                                True,  True,  False,    # roll, pitch, yaw
-                                False, False, False,   # x, y, z velocity
-                                True,  True,  True,    # roll, pitch, yaw rates
-                                True,  True,  True],   # x, y, z acceleration
-                 "imu0_queue_size": 50,
-                 "imu0_nodelay": False,
-                 "odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
-                 "odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
-                 # OVERRIDE zero covariances from Gazebo
-                
-                "imu0_angular_velocity_covariance": [0.001, 0.0, 0.0,
-                                                     0.0, 0.001, 0.0,
-                                                     0.0, 0.0, 0.001],
-
-                "imu0_linear_acceleration_covariance": [0.01, 0.0, 0.0,
-                                                        0.0, 0.01, 0.0,
-                                                        0.0, 0.0, 0.01],
-
-                "imu0_orientation_covariance": [0.01, 0.0, 0.0,
-                                                0.0, 0.01, 0.0,
-                                                0.0, 0.0, 0.01],
-                
-                # Gazebo-specific settings
-                "imu0_differential": False,
-                "imu0_relative": False,
-                "imu0_remove_gravitational_acceleration": True,
-                "two_d_mode": True,  # Often helpful for ground robots
-                }]
-    )
-
     # IMU filter node
+    # Filter which fuses angular velocities, accelerations, and 
+    # (optionally) magnetic readings from a generic IMU device 
+    # into an orientation.
     # This node filters the IMU data using the Madgwick filter.
     # It publishes the filtered IMU data to the /imu/data topic.
-    # It is used to provide a more accurate IMU data for the robot.
     imu_filter_node = Node(
         package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
         parameters=[{'use_mag': False, 
-                     'world_frame':'nwu', # ned, enu, nwu
+                     'world_frame':'enu', # ned, enu, nwu
                      #'yaw_offset': -1.5708,
                      'publish_tf':False,
                      #'fixed_frame': "camera_link"
                      }],
-        remappings=[('imu/data_raw', '/l515/imu/data')]
+        remappings=[('imu/data_raw', '/l515/imu/raw')]
     )
+    
     # Visual Odometry node
     # This node uses visual odometry to estimate the pose of the robot based on the camera images.
     # It publishes the estimated pose to the /vo_odom topic.
     # It is used to provide an initial guess for the RTAB-Map SLAM algorithm
     # and to provide a more accurate pose estimate for the robot.
     visual_odom_parameters = {
-        'frame_id': 'ackmann/base_footprint',
-        'odom_frame_id': 'vo_odom',
+        'frame_id': 'ackmann/base_footprint',   # Defaults to "base_footprint" if unspecified
+        'odom_frame_id': 'odom',                # Defaults to "odom" if unspecified
         #'guess_frame_id': 'ackmann/base_footprint',
-        'publish_tf': True,
+        'publish_tf': False,
         'use_sim_time': use_sim_time,
         'Odom/Strategy': '0',  # Frame-to-Map visual odometry
         'Vis/MinInliers': '10',  # Minimum inliers for robust matching
@@ -228,9 +161,10 @@ def generate_launch_description():
     # and to provide a more accurate odometry estimate for the robot.
     # It is a part of the RTAB-Map SLAM framework.
     icp_parameters={
-        'odom_frame_id':'icp_odom',
-        'guess_frame_id':'ackmann/odom',
-        'publish_tf': True,  # Add this
+        'odom_frame_id':'odom',
+        #'guess_frame_id':'ackmann/odom',
+        'publish_tf': True,  # Publish TF transforms
+        'use_sim_time': use_sim_time,
         'Icp/CorrespondenceRatio': '0.03',  # Further relax from 0.05
         'Icp/PointToPlaneMinComplexity': '0.01',  # Lower for corridors
         'Icp/MaxCorrespondenceDistance': '0.2',  # Increase from 0.1
@@ -247,12 +181,85 @@ def generate_launch_description():
         remappings=remappings,
         arguments=["--ros-args", "--log-level", 'icp_odometry:=warn'])
 
+
+    # EKF filter node for localization
+    # This node uses the Extended Kalman Filter to fuse odometry and IMU data.
+    # It publishes the estimated pose to the /odom topic.
+    # It is used to provide a more accurate pose estimate for the robot.
+    # It is a part of the robot_localization package.
+    pkg = get_package_share_directory('robot_description')
+    control_params_file = PathJoinSubstitution([pkg, 'config', 'ekf.yaml'])
+    ekf_filter_node = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[#control_params_file,
+                {"frequency": 30.0,
+                 "predict_to_current_time": True,
+                 "history_length": 5.0, 
+                 "use_sim_time": use_sim_time,
+                 "two_d_mode": True,  # Often helpful for ground robots
+                 "publish_tf": True,
+                 "map_frame": "map",                # Defaults to "map" if unspecified
+                 "odom_frame": "odom",           # Defaults to "odom" if unspecified
+                 "base_link_frame": "ackmann/base_footprint",    # Defaults to "base_link" if unspecified
+                 "world_frame": "odom",             # Defaults to the value of odom_frame if unspecified
+                 
+                 # Additional stability parameters
+                "sensor_timeout": 0.2,  # Wait for sensor data
+                "transform_timeout": 0.2,
+                "transform_time_offset": 0.1,
+
+                 "odom0": "/vo_odom",
+                 "odom0_config": [True, True, False,    # x, y, z position
+                                  False, False, True,     # roll, pitch, yaw
+                                  True, True, False,     # x, y, z velocity
+                                  False, False, True,     # roll, pitch, yaw rates
+                                  False, False, False], # x, y, z acceleration
+                 "odom0_queue_size": 10,
+                 "odom0_nodelay": False,
+                 "odom0_differential": False,
+                 "odom0_relative": True,
+                 #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
+                 #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+                 
+                 # IMU Configuration  
+                "imu0": "/imu/data", #"/l515/imu/data",
+                "imu0_config": [False, False, False,   # x, y, z position
+                                False,  False,  True,    # roll, pitch, yaw
+                                False, False, False,   # x, y, z velocity
+                                False,  False,  True,    # roll, pitch, yaw rates
+                                False,  False,  False],   # x, y, z acceleration
+                 "imu0_queue_size": 10,
+                 "imu0_nodelay": False,
+                "imu0_differential": False,
+                "imu0_relative": True,
+                "imu0_remove_gravitational_acceleration": True,
+                 # OVERRIDE zero covariances from Gazebo
+                "imu0_angular_velocity_covariance": [0.001, 0.0, 0.0,
+                                                     0.0, 0.001, 0.0,
+                                                     0.0, 0.0, 0.001],
+
+                "imu0_linear_acceleration_covariance": [0.01, 0.0, 0.0,
+                                                        0.0, 0.01, 0.0,
+                                                        0.0, 0.0, 0.01],
+
+                "imu0_orientation_covariance": [0.01, 0.0, 0.0,
+                                                0.0, 0.01, 0.0,
+                                                0.0, 0.0, 0.01],
+                
+                }]
+    )
+
     # SLAM Mode:
     slam = Node(
         condition=UnlessCondition(localization),
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[rtabmap_parameters, shared_parameters],
-        remappings=remappings,
+        remappings=remappings + [
+            ('odom', "/odometry/filtered"),     # '/odometry/filtered'
+        ],
         arguments=['-d'])
         
     # Localization mode:
@@ -328,7 +335,7 @@ def generate_launch_description():
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(rgbd_sync)
     ld.add_action(depth_to_scan)
-    #ld.add_action(imu_filter_node)
+    ld.add_action(imu_filter_node)
     ld.add_action(visual_odom)
     ld.add_action(icp_odom)
     ld.add_action(ekf_filter_node)

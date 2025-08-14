@@ -449,7 +449,7 @@
       <ros> 
         <namespace></namespace> 
         <remapping>ackermann_steering_controller/reference_unstamped:=cmd_vel</remapping> 
-        <!-- <remapping>ackermann_steering_controller/odometry:=odom</remapping>  -->
+        <!-- <remapping>ackermann_steering_controller/odometry:=/wheel/odom</remapping>  -->
         <!-- <remapping>ackermann_steering_controller/tf_odometry:=tf</remapping>  -->
       </ros> 
     </plugin>

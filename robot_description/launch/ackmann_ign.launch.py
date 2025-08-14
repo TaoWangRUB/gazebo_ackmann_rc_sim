@@ -162,7 +162,7 @@ def generate_launch_description():
             '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
             '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
             '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
-            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
+            #'/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
             '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
@@ -178,7 +178,7 @@ def generate_launch_description():
         output='screen',
         remappings=[ 
             ('/ackmann/tf', '/tf'),
-            ('/ackmann/odom', '/odom'),
+            #('/ackmann/odom', '/odom'),
             #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
     ) 
@@ -332,10 +332,10 @@ def generate_launch_description():
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
     ld.add_action(scan_clipper_node)
-    ld.add_action(imu_covariance_injector)
+    #ld.add_action(imu_covariance_injector)
     ld.add_action(ros2_controller_callback)
     #ld.add_action(localization)
     #ld.add_action(slam)
-    #ld.add_action(nav2)
+    ld.add_action(nav2)
     ld.add_action(rviz)
     return ld

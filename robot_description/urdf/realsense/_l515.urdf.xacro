@@ -192,6 +192,7 @@ aluminum peripherial evaluation case.
 
       <joint name="${name}_imu_optical_joint" type="fixed">
         <origin xyz = "${l515_cam_color_to_imu_px} ${l515_cam_color_to_imu_py} ${l515_cam_color_to_imu_pz}" rpy = "${-M_PI/2} 0 ${-M_PI/2}" />
+        <!-- <origin xyz = "${l515_cam_color_to_imu_px} ${l515_cam_color_to_imu_py} ${l515_cam_color_to_imu_pz}" rpy = "0 0 0" /> -->
         <parent link="${name}_link" />
         <child link="${name}_imu_optical_frame" />
       </joint>
