@@ -230,8 +230,8 @@ def generate_launch_description():
           'Mem/NotLinkedNodesKept':'false',
           'Grid/MaxGroundHeight': '0.1',        # Maximum height of ground points
           'Grid/MaxObstacleHeight': '0.8',      # Maximum height of obstacle points
-          'Grid/NormalsSegmentation': 'true',   # Enable normals segmentation
-          'Grid/RangeMax': '20',                # Maximum range for point cloud processing
+          'Grid/NormalsSegmentation': 'false',   # Enable normals segmentation
+          #'Grid/RangeMax': '100',                # Maximum range for point cloud processing
           'Grid/3D': 'false',                   # Use 2D grid for navigation
           'Grid/RayTracing': 'true',            # Enable ray tracing for better obstacle detection
           'Reg/Strategy':'1',                   # Use 3D->2D visual odometry
@@ -243,9 +243,9 @@ def generate_launch_description():
     remappings=[
           ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
           ('rgb/image', '/ackmann/depth_camera/image'),
-          ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
+          ('rgb/camera_info', '/ackmann/l515/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
-          ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
+          ('depth/camera_info', '/ackmann/l515/camera_info')]
     
     # Nodes to launch
     rgbd_sync = Node(
