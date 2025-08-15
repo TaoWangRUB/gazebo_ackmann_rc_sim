@@ -4,10 +4,11 @@
     <General>
       <!-- Use specific interfaces (add others like eth0 if needed) -->
       <Interfaces>
-        <NetworkInterface address="127.0.0.1"/>
-        <!-- You can add a real interface like:
-        <NetworkInterface name="eth0"/>
-        -->
+        <!-- You can add a real interface like:-->
+        <!-- <NetworkInterface address="127.0.0.1"/> -->
+        <!-- <NetworkInterface name="enx50a030095964"/> -->
+        <NetworkInterface name="wlp0s20f3"/>
+        
       </Interfaces>
 
       <!-- Enable multicast for auto discovery -->

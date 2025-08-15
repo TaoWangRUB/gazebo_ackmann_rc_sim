@@ -6,7 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetE
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 robot_base_color = '0.0 0.0 1.0 0.95' #Ign and Rviz color of the robot's main body (rgba)
 
@@ -209,14 +209,17 @@ def generate_launch_description():
         period=3.0,
         actions=[ros2_controller_callback]
     )
+    
     parameters=[{
           'frame_id': 'ackmann/base_footprint',
           'odom_frame': 'odom',
           'base_frame': 'ackmann/base_footprint',
           'map_frame': 'map',
           'publish_tf': False,
-          'subscribe_depth':True,
+          'subscribe_rgbd': True,
+          #'subscribe_depth':True,
           #'subscribe_odom_info':True,
+          'odom_sensor_sync': True,
           'approx_sync':True,
           'approx_sync_max_interval': 0.05,
           'wait_imu_to_init': True,
@@ -243,6 +246,15 @@ def generate_launch_description():
           ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
           ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
+    
+    # Nodes to launch
+    rgbd_sync = Node(
+        package='rtabmap_sync', executable='rgbd_sync', output='screen',
+        parameters=[{
+            'approx_sync':False,  # Use exact sync for better accuracy
+            'approx_sync_max_interval': 0.05,  # Maximum interval for approximate sync
+            'use_sim_time':LaunchConfiguration('use_sim_time')}],
+        remappings=remappings)
     
     ekf_filter_node = Node(
             package='robot_localization',
@@ -372,6 +384,12 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
+    rtabmap_viz = Node(
+        condition=UnlessCondition(LaunchConfiguration('rviz')),
+        package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        remappings=remappings
+    )
+
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(ign_resource_path)
@@ -382,10 +400,12 @@ def generate_launch_description():
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
     #ld.add_action(delayed_controller_spawning)  # Add delay
+    ld.add_action(rgbd_sync)
     ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
     ld.add_action(slam_node)
     ld.add_action(ros2_controller_callback)
     ld.add_action(rviz)
+    ld.add_action(rtabmap_viz)
     return ld
