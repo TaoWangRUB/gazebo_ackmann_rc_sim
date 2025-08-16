@@ -375,15 +375,29 @@
       <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
       <!-- <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id> -->
       <camera name="${l515_name}">
-        <horizontal_fov>1.047</horizontal_fov>
+        <horizontal_fov>1.39626</horizontal_fov>  <!--1.047-->
         <image>
-          <width>640</width>
-          <height>480</height>
+          <width>480</width>
+          <height>360</height>
         </image>
         <clip>
           <near>0.3</near>
           <far>20</far>
         </clip>
+        <lens>
+          <intrinsics>
+            <fx>286.0</fx>
+            <fy>214.5</fy>
+            <cx>240.0</cx>
+            <cy>180.0</cy>
+          </intrinsics>
+          <projection>
+            <p_fx>286.0</p_fx>
+            <p_fy>214.5</p_fy>
+            <p_cx>240.0</p_cx>
+            <p_cy>180.0</p_cy>
+          </projection>
+        </lens>
         <optical_frame_id>${l515_name}_depth_optical_frame</optical_frame_id>
       </camera>
       <always_on>1</always_on>
@@ -394,9 +408,9 @@
       <plugin name="camera_info_publisher" filename="libcamera_info_plugin.so">
         <topic>/$(arg ns)/${l515_name}/camera_info</topic>
         <frame_id>${l515_name}_depth_optical_frame</frame_id>
-        <publish_rate>30.0</publish_rate>
-        <width>640</width>
-        <height>480</height>
+        <publish_rate>60.0</publish_rate>
+        <width>320</width>
+        <height>240</height>
         <horizontal_fov>1.047</horizontal_fov>
         <near_clip>0.3</near_clip>
         <far_clip>20.0</far_clip>

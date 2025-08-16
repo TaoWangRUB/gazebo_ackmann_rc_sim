@@ -243,9 +243,9 @@ def generate_launch_description():
     remappings=[
           ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
           ('rgb/image', '/ackmann/depth_camera/image'),
-          ('rgb/camera_info', '/ackmann/l515/camera_info'),
+          ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
-          ('depth/camera_info', '/ackmann/l515/camera_info')]
+          ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
     
     # Nodes to launch
     rgbd_sync = Node(
@@ -340,7 +340,7 @@ def generate_launch_description():
                          'world_frame':'enu', # ned, enu, nwu
                          #'yaw_offset': -1.5708,
                          'publish_tf':False,
-                         #'fixed_frame': "camera_link"
+                         'fixed_frame': "ackmann/base_footprint",
                          }],
             remappings=[('imu/data_raw', '/l515/imu/raw')])
     
@@ -365,7 +365,7 @@ def generate_launch_description():
         executable='rtabmap', 
         output='screen',
         parameters=parameters + [
-            {'publish_tf': True},
+            {'publish_tf': False},
             {'publish_map_tf': True},
             #{'publish_odom_tf': True},
             {'localization': LaunchConfiguration('localization')}
