@@ -152,7 +152,7 @@ def generate_launch_description():
             '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
             '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
             '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
-            #'/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
+            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
             '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
@@ -167,7 +167,7 @@ def generate_launch_description():
         }],
         output='screen',
         remappings=[ 
-            ('/ackmann/tf', '/tf'),
+            #('/ackmann/tf', '/tf'),
             #('/ackmann/odom', '/odom'),
             #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
@@ -332,17 +332,31 @@ def generate_launch_description():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9]
                             }]
     )
-           
+    
+    # IMU transform node to convert IMU data to the robot's base frame
+    imu_transform_node = Node(
+    package='imu_transformer',
+    executable='imu_transformer_node',
+    parameters=[{
+        'target_frame': 'ackmann/base_footprint',
+        'use_sim_time': LaunchConfiguration('use_sim_time'),
+    }],
+    remappings=[
+        ('imu_in', '/l515/imu/raw'),
+        ('imu_out', '/l515/imu/raw_transformed'),
+    ]
+)      
     # Compute quaternion of the IMU
     imu_filter_node = Node(
             package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
             parameters=[{'use_mag': False, 
                          'world_frame':'enu', # ned, enu, nwu
-                         #'yaw_offset': -1.5708,
+                         #'yaw_offset': 1.5708,
                          'publish_tf':False,
-                         'fixed_frame': "ackmann/base_footprint",
+                         'reverse_tf': False,
+                         #'fixed_frame': "odom",
                          }],
-            remappings=[('imu/data_raw', '/l515/imu/raw')])
+            remappings=[('imu/data_raw', '/l515/imu/raw_transformed'),])
     
     vio_node = Node(
             package='rtabmap_odom', 
@@ -401,6 +415,7 @@ def generate_launch_description():
     ld.add_action(gz_spawn_entity)
     #ld.add_action(delayed_controller_spawning)  # Add delay
     ld.add_action(rgbd_sync)
+    ld.add_action(imu_transform_node)
     ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)

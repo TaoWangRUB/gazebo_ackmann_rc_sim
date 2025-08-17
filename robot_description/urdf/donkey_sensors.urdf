@@ -480,14 +480,15 @@
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->
-    <!-- <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
+    <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
       <dimensions>3</dimensions>
-      <odom_frame>$(arg ns)/odom</odom_frame>
+      <odom_frame>$odom</odom_frame>
       <robot_base_frame>$(arg ns)/base_footprint</robot_base_frame>
       <publish_link_pose>true</publish_link_pose>
       <tf_topic>$(arg ns)/tf</tf_topic> 
       <odom_topic>$(arg ns)/odom</odom_topic>
-    </plugin> -->
+      <publish_tf>false</publish_tf>
+    </plugin>
 
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
       <ros>
