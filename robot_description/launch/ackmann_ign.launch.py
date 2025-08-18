@@ -177,7 +177,7 @@ def generate_launch_description():
         }],
         output='screen',
         remappings=[ 
-            ('/ackmann/tf', '/tf'),
+            #('/ackmann/tf', '/tf'),
             #('/ackmann/odom', '/odom'),
             #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
