@@ -79,8 +79,8 @@ def generate_launch_description():
         'Mem/NotLinkedNodesKept':'false',
         'Grid/MaxGroundHeight': '0.1',
         'Grid/MaxObstacleHeight': '0.8',
-        'Grid/NormalsSegmentation': 'true',
-        'Grid/RangeMax': '20',
+        'Grid/NormalsSegmentation': 'false',
+        #'Grid/RangeMax': '20',
         'Grid/3D': 'false',
         'Grid/RayTracing': 'true'
     }
@@ -108,8 +108,25 @@ def generate_launch_description():
     # Nodes to launch
     rgbd_sync = Node(
         package='rtabmap_sync', executable='rgbd_sync', output='screen',
-        parameters=[{'approx_sync':False, 'use_sim_time':use_sim_time}],
+        parameters=[{
+            'approx_sync':False,
+            'approx_sync_max_interval': 0.05,  # Maximum interval for approximate sync
+            'use_sim_time':use_sim_time}],
         remappings=remappings)
+    
+    # IMU transform node to convert IMU data to the robot's base frame
+    imu_transform_node = Node(
+        package='imu_transformer',
+        executable='imu_transformer_node',
+        parameters=[{
+            'target_frame': 'ackmann/base_footprint',
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+        }],
+        remappings=[
+            ('imu_in', '/l515/imu/raw'),
+            ('imu_out', '/l515/imu/raw_transformed'),
+        ]
+    )     
     # IMU filter node
     # Filter which fuses angular velocities, accelerations, and 
     # (optionally) magnetic readings from a generic IMU device 
@@ -123,8 +140,9 @@ def generate_launch_description():
                      #'yaw_offset': -1.5708,
                      'publish_tf':False,
                      #'fixed_frame': "camera_link"
-                     }],
-        remappings=[('imu/data_raw', '/l515/imu/raw')]
+        }],
+        remappings=[('imu/data_raw', '/l515/imu/raw_transformed'),  # Use transformed IMU data
+        ]
     )
     
     # Visual Odometry node
@@ -189,6 +207,7 @@ def generate_launch_description():
     # It is a part of the robot_localization package.
     pkg = get_package_share_directory('robot_description')
     control_params_file = PathJoinSubstitution([pkg, 'config', 'ekf.yaml'])
+    
     ekf_filter_node = Node(
             package='robot_localization',
             executable='ekf_node',
@@ -207,9 +226,9 @@ def generate_launch_description():
                  "world_frame": "odom",             # Defaults to the value of odom_frame if unspecified
                  
                  # Additional stability parameters
-                "sensor_timeout": 0.2,  # Wait for sensor data
-                "transform_timeout": 0.2,
-                "transform_time_offset": 0.1,
+                 "sensor_timeout": 0.2,  # Wait for sensor data
+                 "transform_timeout": 0.2,
+                 "transform_time_offset": 0.1,
 
                  "odom0": "/vo_odom",
                  "odom0_config": [True, True, False,    # x, y, z position
@@ -225,29 +244,29 @@ def generate_launch_description():
                  #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
                  
                  # IMU Configuration  
-                "imu0": "/imu/data", #"/l515/imu/data",
-                "imu0_config": [False, False, False,   # x, y, z position
+                 "imu0": "/imu/data", #"/l515/imu/data",
+                 "imu0_config": [False, False, False,   # x, y, z position
                                 False,  False,  True,    # roll, pitch, yaw
                                 False, False, False,   # x, y, z velocity
                                 False,  False,  True,    # roll, pitch, yaw rates
                                 False,  False,  False],   # x, y, z acceleration
                  "imu0_queue_size": 10,
                  "imu0_nodelay": False,
-                "imu0_differential": False,
-                "imu0_relative": True,
-                "imu0_remove_gravitational_acceleration": True,
+                 "imu0_differential": False,
+                 "imu0_relative": True,
+                 "imu0_remove_gravitational_acceleration": True,
                  # OVERRIDE zero covariances from Gazebo
-                "imu0_angular_velocity_covariance": [0.001, 0.0, 0.0,
-                                                     0.0, 0.001, 0.0,
-                                                     0.0, 0.0, 0.001],
+                 "imu0_angular_velocity_covariance": [0.001, 0.0, 0.0,
+                                                      0.0, 0.001, 0.0,
+                                                      0.0, 0.0, 0.001],
 
-                "imu0_linear_acceleration_covariance": [0.01, 0.0, 0.0,
-                                                        0.0, 0.01, 0.0,
-                                                        0.0, 0.0, 0.01],
+                 "imu0_linear_acceleration_covariance": [0.01, 0.0, 0.0,
+                                                         0.0, 0.01, 0.0,
+                                                         0.0, 0.0, 0.01],
 
-                "imu0_orientation_covariance": [0.01, 0.0, 0.0,
-                                                0.0, 0.01, 0.0,
-                                                0.0, 0.0, 0.01],
+                 "imu0_orientation_covariance": [0.01, 0.0, 0.0,
+                                                 0.0, 0.01, 0.0,
+                                                 0.0, 0.0, 0.01],
                 
                 }]
     )
@@ -335,6 +354,7 @@ def generate_launch_description():
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(rgbd_sync)
     ld.add_action(depth_to_scan)
+    ld.add_action(imu_transform_node)
     ld.add_action(imu_filter_node)
     ld.add_action(visual_odom)
     ld.add_action(icp_odom)

@@ -351,17 +351,17 @@ def generate_launch_description():
     
     # IMU transform node to convert IMU data to the robot's base frame
     imu_transform_node = Node(
-    package='imu_transformer',
-    executable='imu_transformer_node',
-    parameters=[{
-        'target_frame': 'ackmann/base_footprint',
-        'use_sim_time': LaunchConfiguration('use_sim_time'),
-    }],
-    remappings=[
-        ('imu_in', '/l515/imu/raw'),
-        ('imu_out', '/l515/imu/raw_transformed'),
-    ]
-)      
+        package='imu_transformer',
+        executable='imu_transformer_node',
+        parameters=[{
+            'target_frame': 'ackmann/base_footprint',
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+        }],
+        remappings=[
+            ('imu_in', '/l515/imu/raw'),
+            ('imu_out', '/l515/imu/raw_transformed'),
+        ]
+    )      
     # Compute quaternion of the IMU
     imu_filter_node = Node(
             package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
