@@ -197,8 +197,8 @@ def generate_launch_description():
         package='rtabmap_odom', executable='icp_odometry', output='screen',
         parameters=[icp_parameters, shared_parameters],
         remappings=remappings,
-        arguments=["--ros-args", "--log-level", 'icp_odometry:=warn'])
-
+        arguments=["--ros-args", "--log-level", 'icp_odometry:=warn']
+    )
 
     # EKF filter node for localization
     # This node uses the Extended Kalman Filter to fuse odometry and IMU data.
