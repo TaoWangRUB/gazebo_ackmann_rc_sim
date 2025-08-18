@@ -16,7 +16,7 @@
   <xacro:property name="d435i_z_offset" value="${17*cm2m}"/>
 
   <xacro:property name="l515_x_offset" value="${10*cm2m}"/>
-  <xacro:property name="l515_z_offset" value="${10*cm2m}"/>
+  <xacro:property name="l515_z_offset" value="${50*cm2m}"/>
 
   <xacro:property name="rplidar_x_offset" value="${-4*cm2m}"/>
   <xacro:property name="rplidar_y_offset" value="${0*cm2m}"/>
@@ -375,21 +375,46 @@
       <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
       <!-- <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id> -->
       <camera name="${l515_name}">
-        <horizontal_fov>1.047</horizontal_fov>
+        <horizontal_fov>1.39626</horizontal_fov>  <!--1.047-->
         <image>
-          <width>320</width>
-          <height>240</height>
+          <width>480</width>
+          <height>360</height>
         </image>
         <clip>
           <near>0.3</near>
-          <far>100</far>
+          <far>20</far>
         </clip>
+        <lens>
+          <intrinsics>
+            <fx>286.0</fx>
+            <fy>214.5</fy>
+            <cx>240.0</cx>
+            <cy>180.0</cy>
+          </intrinsics>
+          <projection>
+            <p_fx>286.0</p_fx>
+            <p_fy>214.5</p_fy>
+            <p_cx>240.0</p_cx>
+            <p_cy>180.0</p_cy>
+          </projection>
+        </lens>
         <optical_frame_id>${l515_name}_depth_optical_frame</optical_frame_id>
       </camera>
       <always_on>1</always_on>
       <update_rate>30</update_rate>
       <visualize>true</visualize>
       <topic>$(arg ns)/depth_camera</topic>
+      <!-- Your plugin -->
+      <plugin name="camera_info_publisher" filename="libcamera_info_plugin.so">
+        <topic>/$(arg ns)/${l515_name}/camera_info</topic>
+        <frame_id>${l515_name}_depth_optical_frame</frame_id>
+        <publish_rate>60.0</publish_rate>
+        <width>320</width>
+        <height>240</height>
+        <horizontal_fov>1.047</horizontal_fov>
+        <near_clip>0.3</near_clip>
+        <far_clip>20.0</far_clip>
+      </plugin>
     </sensor>
   </gazebo>
   <!-- IMU sensor -->
@@ -455,14 +480,15 @@
     </plugin>
 
     <!-- World odometry plugin (by default, odometry topic is used) -->
-    <!-- <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
+    <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
       <dimensions>3</dimensions>
-      <odom_frame>$(arg ns)/odom</odom_frame>
+      <odom_frame>$odom</odom_frame>
       <robot_base_frame>$(arg ns)/base_footprint</robot_base_frame>
       <publish_link_pose>true</publish_link_pose>
       <tf_topic>$(arg ns)/tf</tf_topic> 
       <odom_topic>$(arg ns)/odom</odom_topic>
-    </plugin> -->
+      <publish_tf>false</publish_tf>
+    </plugin>
 
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
       <ros>
