@@ -283,10 +283,26 @@ def generate_launch_description():
                                   False, False, False],   # accelerations (disable all)
                  "odom0_queue_size": 10,
                  "odom0_nodelay": False,
-                 "odom0_differential": False,
+                 "odom0_differential": True,
                  "odom0_relative": True,
-                 #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
-                 #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+                 # Higher noise for visual odometry (less trust)
+                 #"odom0_pose_noise": [0.5, 0.5, 0.0, 0.0, 0.0, 0.2],   # Higher position noise
+                 #"odom0_twist_noise": [0.3, 0.3, 0.0, 0.0, 0.0, 0.15], # Higher velocity noise
+                 # Wheel encoder odometry (new)
+                 "odom1": "/ackmann/odom",                 # ✅ Wheel encoder topic
+                 "odom1_config": [True, True, False,      # x, y, z (same as odom0)
+                                False, False, True,     # roll, pitch, yaw
+                                True, True, False,      # x_vel, y_vel, z_vel
+                                False, False, True,     # roll_vel, pitch_vel, yaw_vel
+                                False, False, False],   # accelerations
+                 "odom1_queue_size": 10,
+                 "odom1_nodelay": False,
+                 "odom1_differential": True,
+                 "odom1_relative": True,
+                 # Lower noise for wheel encoders (more trust)
+                 #"odom1_pose_noise": [0.1, 0.1, 0.0, 0.0, 0.0, 0.05],  # Lower position noise  
+                 #"odom1_twist_noise": [0.05, 0.05, 0.0, 0.0, 0.0, 0.02], # Lower velocity noise
+
                  "imu0": "imu/data", #"/l515/imu/raw",
                  "imu0_config": [False, False, False,    # position (disable all)
                                  False, False, True,      # orientation (only yaw)
