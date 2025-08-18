@@ -6,7 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetE
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
-from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 robot_base_color = '0.0 0.0 1.0 0.95' #Ign and Rviz color of the robot's main body (rgba)
 
@@ -152,7 +152,7 @@ def generate_launch_description():
             '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
             '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
             '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
-            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
+            #'/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
             '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
@@ -167,7 +167,7 @@ def generate_launch_description():
         }],
         output='screen',
         remappings=[ 
-            #('/ackmann/tf', '/tf'),
+            ('/ackmann/tf', '/tf'),
             #('/ackmann/odom', '/odom'),
             #('/world/warehouse/model/ackmann/joint_state', '/joint_states'),
         ]
@@ -209,17 +209,14 @@ def generate_launch_description():
         period=3.0,
         actions=[ros2_controller_callback]
     )
-    
     parameters=[{
           'frame_id': 'ackmann/base_footprint',
           'odom_frame': 'odom',
           'base_frame': 'ackmann/base_footprint',
           'map_frame': 'map',
           'publish_tf': False,
-          'subscribe_rgbd': True,
-          #'subscribe_depth':True,
+          'subscribe_depth':True,
           #'subscribe_odom_info':True,
-          'odom_sensor_sync': True,
           'approx_sync':True,
           'approx_sync_max_interval': 0.05,
           'wait_imu_to_init': True,
@@ -230,8 +227,8 @@ def generate_launch_description():
           'Mem/NotLinkedNodesKept':'false',
           'Grid/MaxGroundHeight': '0.1',        # Maximum height of ground points
           'Grid/MaxObstacleHeight': '0.8',      # Maximum height of obstacle points
-          'Grid/NormalsSegmentation': 'false',   # Enable normals segmentation
-          #'Grid/RangeMax': '100',                # Maximum range for point cloud processing
+          'Grid/NormalsSegmentation': 'true',   # Enable normals segmentation
+          'Grid/RangeMax': '20',                # Maximum range for point cloud processing
           'Grid/3D': 'false',                   # Use 2D grid for navigation
           'Grid/RayTracing': 'true',            # Enable ray tracing for better obstacle detection
           'Reg/Strategy':'1',                   # Use 3D->2D visual odometry
@@ -246,15 +243,6 @@ def generate_launch_description():
           ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
           ('depth/image', '/ackmann/depth_camera/depth_image'),
           ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
-    
-    # Nodes to launch
-    rgbd_sync = Node(
-        package='rtabmap_sync', executable='rgbd_sync', output='screen',
-        parameters=[{
-            'approx_sync':False,  # Use exact sync for better accuracy
-            'approx_sync_max_interval': 0.05,  # Maximum interval for approximate sync
-            'use_sim_time':LaunchConfiguration('use_sim_time')}],
-        remappings=remappings)
     
     ekf_filter_node = Node(
             package='robot_localization',
@@ -283,26 +271,10 @@ def generate_launch_description():
                                   False, False, False],   # accelerations (disable all)
                  "odom0_queue_size": 10,
                  "odom0_nodelay": False,
-                 "odom0_differential": True,
+                 "odom0_differential": False,
                  "odom0_relative": True,
-                 # Higher noise for visual odometry (less trust)
-                 #"odom0_pose_noise": [0.5, 0.5, 0.0, 0.0, 0.0, 0.2],   # Higher position noise
-                 #"odom0_twist_noise": [0.3, 0.3, 0.0, 0.0, 0.0, 0.15], # Higher velocity noise
-                 # Wheel encoder odometry (new)
-                 "odom1": "/ackmann/odom",                 # ✅ Wheel encoder topic
-                 "odom1_config": [True, True, False,      # x, y, z (same as odom0)
-                                False, False, True,     # roll, pitch, yaw
-                                True, True, False,      # x_vel, y_vel, z_vel
-                                False, False, True,     # roll_vel, pitch_vel, yaw_vel
-                                False, False, False],   # accelerations
-                 "odom1_queue_size": 10,
-                 "odom1_nodelay": False,
-                 "odom1_differential": True,
-                 "odom1_relative": True,
-                 # Lower noise for wheel encoders (more trust)
-                 #"odom1_pose_noise": [0.1, 0.1, 0.0, 0.0, 0.0, 0.05],  # Lower position noise  
-                 #"odom1_twist_noise": [0.05, 0.05, 0.0, 0.0, 0.0, 0.02], # Lower velocity noise
-
+                 #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
+                 #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
                  "imu0": "imu/data", #"/l515/imu/raw",
                  "imu0_config": [False, False, False,    # position (disable all)
                                  False, False, True,      # orientation (only yaw)
@@ -348,31 +320,17 @@ def generate_launch_description():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9]
                             }]
     )
-    
-    # IMU transform node to convert IMU data to the robot's base frame
-    imu_transform_node = Node(
-    package='imu_transformer',
-    executable='imu_transformer_node',
-    parameters=[{
-        'target_frame': 'ackmann/base_footprint',
-        'use_sim_time': LaunchConfiguration('use_sim_time'),
-    }],
-    remappings=[
-        ('imu_in', '/l515/imu/raw'),
-        ('imu_out', '/l515/imu/raw_transformed'),
-    ]
-)      
+           
     # Compute quaternion of the IMU
     imu_filter_node = Node(
             package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
             parameters=[{'use_mag': False, 
                          'world_frame':'enu', # ned, enu, nwu
-                         #'yaw_offset': 1.5708,
+                         #'yaw_offset': -1.5708,
                          'publish_tf':False,
-                         'reverse_tf': False,
-                         #'fixed_frame': "odom",
+                         #'fixed_frame': "camera_link"
                          }],
-            remappings=[('imu/data_raw', '/l515/imu/raw_transformed'),])
+            remappings=[('imu/data_raw', '/l515/imu/raw')])
     
     vio_node = Node(
             package='rtabmap_odom', 
@@ -395,7 +353,7 @@ def generate_launch_description():
         executable='rtabmap', 
         output='screen',
         parameters=parameters + [
-            {'publish_tf': False},
+            {'publish_tf': True},
             {'publish_map_tf': True},
             #{'publish_odom_tf': True},
             {'localization': LaunchConfiguration('localization')}
@@ -414,12 +372,6 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
-    rtabmap_viz = Node(
-        condition=UnlessCondition(LaunchConfiguration('rviz')),
-        package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-        remappings=remappings
-    )
-
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(ign_resource_path)
@@ -430,13 +382,10 @@ def generate_launch_description():
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
     #ld.add_action(delayed_controller_spawning)  # Add delay
-    ld.add_action(rgbd_sync)
-    ld.add_action(imu_transform_node)
     ld.add_action(imu_filter_node)
     ld.add_action(vio_node)
     ld.add_action(ekf_filter_node)
     ld.add_action(slam_node)
     ld.add_action(ros2_controller_callback)
     ld.add_action(rviz)
-    ld.add_action(rtabmap_viz)
     return ld
