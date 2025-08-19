@@ -25,6 +25,8 @@ RUN apt-get update && \
     ros-humble-rtabmap \
     ros-humble-rtabmap-ros \
     ros-humble-robot-localization \
+    ros-humble-imu-transformer \
+    ros-humble-joint-state-publisher-gui \
     ros-humble-rmw-cyclonedds-cpp && \
     rm -rf /var/lib/apt/lists/*
 

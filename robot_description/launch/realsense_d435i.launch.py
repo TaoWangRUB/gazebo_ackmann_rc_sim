@@ -7,15 +7,15 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessExit
+from launch.event_handlers import OnProcessExit, OnProcessStart
 robot_base_color = '0.0 0.0 1.0 0.95' #Ign and Rviz color of the robot's main body (rgba)
 
 ARGUMENTS = [
-    DeclareLaunchArgument('robot_name', default_value='ackmann',
+    DeclareLaunchArgument('robot_name', default_value='ackermann',
                           description='Robot name'),
     DeclareLaunchArgument('namespace', default_value=LaunchConfiguration('robot_name'),
                           description='Robot namespace'),
-    DeclareLaunchArgument('rviz', default_value='false',
+    DeclareLaunchArgument('rviz', default_value='true',
                           choices=['true', 'false'], description='Start rviz.'),
     DeclareLaunchArgument('world', default_value='warehouse',
                           description='Ignition World'),
@@ -68,7 +68,7 @@ def generate_launch_description():
                                        'urdf',
                                        'donkey_sensors.urdf'
                                        ])
-    namespace = LaunchConfiguration('namespace')
+    namespace = '' #LaunchConfiguration('namespace')
     
     # Robot state publisher
     robot_state_publisher = Node(
@@ -81,7 +81,8 @@ def generate_launch_description():
             {'robot_description': Command([
                 'xacro', ' ', xacro_file, ' ',
                 'gazebo:=ignition', ' ',
-                'namespace:=', namespace])},
+                'namespace:=', namespace
+                ])},
         ],
         remappings=[
             ('/tf', 'tf'),
@@ -95,7 +96,8 @@ def generate_launch_description():
         executable='joint_state_publisher',
         name='joint_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
+                    ],
         remappings=[
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
@@ -106,17 +108,25 @@ def generate_launch_description():
     realsense_d435i = IncludeLaunchDescription(realsense_launch,
         launch_arguments=[
             ('camera_namespace', ''),
+            ('camera_name', 'd435i'),
+            ('publish_tf', 'false'),
             ('enable_accel', 'true'),
             ('enable_gyro', 'true'),
+            ('enable_rgbd', 'true'),
             ('unite_imu_method', LaunchConfiguration('unite_imu_method')),
             ('enable_sync', 'true'),
-            ('rgb_camera.profile', '640x480x15'),                              
-            ('depth_module.profile', '640x480x15'),
-            ('enable_infra1', 'true'),
-            ('enable_infra2', 'true'),
-            ('enable_pointcloud', 'true'),
+
+            ('enable_color', 'true'),
+            ('enable_depth', 'true'),
+            ('align_depth.enable', 'true'),
+            ('enable_rgbd', 'false'),
+            ('rgb_camera.color_profile', '640x480x15'),                              
+            ('depth_module.depth_profile', '640x480x15'),
+            ('enable_infra1', 'false'),
+            ('enable_infra2', 'false'),
+            ('pointcloud.enable', 'true'),
         ],
-        condition=IfCondition(LaunchConfiguration('use_sim_time'))
+        #condition=IfCondition(LaunchConfiguration('use_sim_time'))
     )
 
     # Scan clipper node
@@ -149,7 +159,7 @@ def generate_launch_description():
         }],
     )      
 
-    """ ros2_controller = IncludeLaunchDescription(
+    ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
         launch_arguments=[
@@ -157,11 +167,13 @@ def generate_launch_description():
         ]
     ) 
     ros2_controller_callback = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=gz_spawn_entity,
-            on_exit=[ros2_controller],
+        #event_handler=OnProcessExit(
+        event_handler=OnProcessStart(
+            target_action=robot_state_publisher,
+            #on_exit=[ros2_controller],
+            on_start=[ros2_controller],
         )
-    ) """
+    )
 
     # Localization
     localization = IncludeLaunchDescription(
@@ -203,7 +215,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([rviz_launch]),
         launch_arguments=[
             ('namespace', ''),
-            ('use_sim_time', LaunchConfiguration('use_sim_time'))],
+        ],
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
@@ -212,7 +224,7 @@ def generate_launch_description():
     ld.add_action(realsense_d435i)
     ld.add_action(robot_state_publisher)
     ld.add_action(joint_state_publisher)
-    #ld.add_action(ros2_controller_callback)
+    ld.add_action(ros2_controller_callback)
     #ld.add_action(nav2)
-    #ld.add_action(rviz)
+    ld.add_action(rviz)
     return ld

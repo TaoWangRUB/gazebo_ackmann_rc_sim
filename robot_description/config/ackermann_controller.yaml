@@ -23,13 +23,6 @@ joint_state_broadcaster:
     use_sim_time: true
     publish_rate: 50.0
     frame_id: "ackmann/base_footprint"  
-    joints:
-      - ackmann/front_left_wheel_joint
-      - ackmann/front_right_wheel_joint
-      - ackmann/rear_left_wheel_joint
-      - ackmann/rear_right_wheel_joint
-      - ackmann/front_left_wheel_steering_joint
-      - ackmann/front_right_wheel_steering_joint
 
 ackermann_steering_controller:
   ros__parameters:
