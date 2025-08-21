@@ -24,6 +24,12 @@ def generate_launch_description():
     control_params_file = PathJoinSubstitution(
         [pkg_control, 'config', 'ackermann_controller.yaml'])
     
+    robot_description = Command([
+        'xacro ', str(PathJoinSubstitution(
+            [pkg_control, 'urdf', 'donkey_sensors.urdf']
+        ))
+    ])
+
     # Controller manager (ros2_control_node)
     controller_manager = Node(
         package='controller_manager',
@@ -111,7 +117,7 @@ def generate_launch_description():
 
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(ackmann_controller_callback)
-    # ld.add_action(controller_manager)
+    ld.add_action(controller_manager)
     ld.add_action(joint_state_controller_node)
     #ld.add_action(tf_namespaced_odom_publisher)
     #ld.add_action(tf_namespaced_base_link_publisher)

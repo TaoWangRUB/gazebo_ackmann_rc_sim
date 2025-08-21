@@ -27,15 +27,22 @@ RUN apt-get update && \
     ros-humble-robot-localization \
     ros-humble-imu-transformer \
     ros-humble-joint-state-publisher-gui \
+    ros-humble-plotjuggler-ros \
     ros-humble-rmw-cyclonedds-cpp && \
     rm -rf /var/lib/apt/lists/*
 
 # 4. Workspace
 RUN mkdir -p /workspace
-WORKDIR /workspace
+RUN useradd -m -u 1000 px4 && \
+    echo "px4 ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+USER px4
+ENV HOME=/home/px4
+WORKDIR /workspace
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
 
