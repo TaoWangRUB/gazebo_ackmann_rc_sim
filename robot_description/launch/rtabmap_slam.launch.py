@@ -47,6 +47,26 @@ ARGUMENTS = [
         DeclareLaunchArgument(
             'rtabmap_viz', default_value='true', choices=['true', 'false'],
             description='Launch rtabmap_viz for visualization.'),
+        
+        DeclareLaunchArgument(
+            'imu_raw_topic', default_value='/l515/imu/raw',
+            description='imu topic from sensor'),
+        
+        DeclareLaunchArgument(
+            'rgb_image_topic', default_value='/l515/image',
+            description='imu topic from sensor'),
+        
+        DeclareLaunchArgument(
+            'rgb_camera_info_topic', default_value='/l515/camera_info',
+            description='imu topic from sensor'),
+        
+        DeclareLaunchArgument(
+            'depth_image_topic', default_value='/l515/depth_image',
+            description='imu topic from sensor'),
+        
+        DeclareLaunchArgument(
+            'depth_camera_info_topic', default_value='/l515/camera_info',
+            description='imu topic from sensor'),
 ]
 
 def generate_launch_description():
@@ -100,10 +120,11 @@ def generate_launch_description():
         ('scan', scan_topic),
         ('odom', odom_topic),
         ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
-        ('rgb/image', '/ackmann/depth_camera/image'),
-        ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
-        ('depth/image', '/ackmann/depth_camera/depth_image'),
-        ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
+        ('rgb/image', LaunchConfiguration('rgb_image_topic')), 
+        ('rgb/camera_info', LaunchConfiguration('rgb_camera_info_topic')),
+        ('depth/image', LaunchConfiguration('depth_image_topic')),
+        ('depth/camera_info', LaunchConfiguration('depth_camera_info_topic'))
+    ]
     
     # Nodes to launch
     rgbd_sync = Node(
@@ -123,8 +144,8 @@ def generate_launch_description():
             'use_sim_time': LaunchConfiguration('use_sim_time'),
         }],
         remappings=[
-            ('imu_in', '/l515/imu/raw'),
-            ('imu_out', '/l515/imu/raw_transformed'),
+            ('imu_in', LaunchConfiguration('imu_raw_topic')),
+            ('imu_out', '/imu/raw_transformed'),
         ]
     )     
     # IMU filter node
@@ -141,7 +162,7 @@ def generate_launch_description():
                      'publish_tf':False,
                      #'fixed_frame': "camera_link"
         }],
-        remappings=[('imu/data_raw', '/l515/imu/raw_transformed'),  # Use transformed IMU data
+        remappings=[('imu/data_raw', '/imu/raw_transformed'),  # Use transformed IMU data
         ]
     )
     
@@ -359,9 +380,9 @@ def generate_launch_description():
     ld.add_action(visual_odom)
     ld.add_action(icp_odom)
     ld.add_action(ekf_filter_node)
-    #ld.add_action(rgbd_to_points)
-    #ld.add_action(obstacle_detection)
-    ld.add_action(slam)
-    ld.add_action(localization)
+    # #ld.add_action(rgbd_to_points)
+    # #ld.add_action(obstacle_detection)
+    # ld.add_action(slam)
+    # ld.add_action(localization)
     ld.add_action(rtabmap_viz)
     return ld

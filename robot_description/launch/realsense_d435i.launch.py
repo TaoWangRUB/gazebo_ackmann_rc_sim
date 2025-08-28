@@ -110,7 +110,9 @@ def generate_launch_description():
             ('camera_namespace', ''),
             ('camera_name', 'd435i'),
             ('publish_tf', 'false'),
+            ('accel_qos', 'SYSTEM_DEFAULT'),
             ('enable_accel', 'true'),
+            ('gyro_qos', 'SYSTEM_DEFAULT'),
             ('enable_gyro', 'true'),
             ('enable_rgbd', 'true'),
             ('unite_imu_method', LaunchConfiguration('unite_imu_method')),
@@ -128,37 +130,128 @@ def generate_launch_description():
         ],
         #condition=IfCondition(LaunchConfiguration('use_sim_time'))
     )
+    remappings=[
+        ('scan', '/scan'),
+        ('odom', '/vo_odom'),
+        ('imu', '/imu/data'),
+        ('rgb/image', '/d435i/color/image_raw'), 
+        ('rgb/camera_info', '/d435i/color/camera_info'),
+        ('depth/image', '/d435i/depth/image_rect_raw'),
+        ('depth/camera_info', '/d435i/depth/camera_info'),
+    ]
 
-    # Scan clipper node
-    scan_clipper_node = Node(
-        package='robot_description',
-        executable='scan_clipper.py',
-        name='scan_clipper',
-        output='screen',
+    # Nodes to launch
+    rgbd_sync = Node(
+        package='rtabmap_sync', executable='rgbd_sync', output='screen',
         parameters=[{
-            #'max_range': LaunchConfiguration('max_range'),
-            #'min_range': LaunchConfiguration('min_range'),
-            'input_topic': "/rplidar/scan",
-            'output_topic': "/scan",
+            'approx_sync':False,
+            'approx_sync_max_interval': 0.05,  # Maximum interval for approximate sync
+            'use_sim_time':LaunchConfiguration('use_sim_time')}],
+        remappings=remappings)
+    
+    # IMU transform node to convert IMU data to the robot's base frame
+    imu_transform_node = Node(
+        package='imu_transformer',
+        executable='imu_transformer_node',
+        parameters=[{
+            'target_frame': 'ackmann/base_footprint',
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
         }],
+        remappings=[
+            ('imu_in', '/d435i/imu'), 
+            ('imu_out', '/imu/raw_transformed'),
+        ]
+    )     
+
+    # IMU filter node
+    imu_filter_node = Node(
+        package='imu_filter_madgwick', executable='imu_filter_madgwick_node', output='screen',
+        parameters=[{'use_mag': False, 
+                     'world_frame':'enu', # ned, enu, nwu
+                     #'yaw_offset': -1.5708,
+                     'publish_tf':False,
+                     #'fixed_frame': "camera_link"
+        }],
+        remappings=[('imu/data_raw', '/imu/raw_transformed'),  # Use transformed IMU data
+        ]
+    )
+
+    # Odometry node
+    visual_odom_parameters = {
+        'frame_id': 'ackmann/base_footprint',   # Defaults to "base_footprint" if unspecified
+        'odom_frame_id': 'odom',                # Defaults to "odom" if unspecified
+        #'guess_frame_id': 'ackmann/base_footprint',
+        'publish_tf': False,
+        'use_sim_time': LaunchConfiguration('use_sim_time'),
+        'Odom/Strategy': '0',  # Frame-to-Map visual odometry
+        'Vis/MinInliers': '10',  # Minimum inliers for robust matching
+        'Vis/FeatureType': '6',  # ORB features (6), robust for visual odometry
+        'Vis/MaxFeatures': '1000',  # Max features to detect
+        'Vis/EstimationType': '1',  # 3D->2D (PnP) for 2D navigation
+        'Vis/MaxDepth': '20.0',  # Max depth for point cloud
+        'Odom/GuessMotion': 'true',  # Use motion model for better initial guess
+        'Odom/GuessSmoothingDelay': '0.1',
+    }
+    visual_odom = Node(
+        package='rtabmap_odom', executable='rgbd_odometry', output='screen',
+        parameters=[visual_odom_parameters],
+        remappings=remappings,
+        arguments=["--ros-args", "--log-level", 'rgbd_odometry:=warn']
     )
     
-    # IMU covariance injector node
-    # This node injects fixed covariance values into the IMU messages
-    # It is used to ensure that the IMU messages have non-zero covariance values
-    # This is important for some algorithms that require covariance information
-    # such as sensor fusion algorithms
-    imu_covariance_injector = Node(
-        package='robot_description',
-        executable='imu_covariance_injector.py',
-        name='imu_covariance_injector',
-        output='screen',
-        parameters=[{
-            'input_topic': '/l515/imu/raw',
-            'output_topic': '/l515/imu/data',
-        }],
-    )      
+    # EKF node
+    ekf_filter_node = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[#control_params_file,
+                {"frequency": 30.0,
+                 "predict_to_current_time": True,
+                 "history_length": 5.0, 
+                 "use_sim_time": LaunchConfiguration('use_sim_time'),
+                 "two_d_mode": True,  # Often helpful for ground robots
+                 "publish_tf": True,
+                 "map_frame": "map",                # Defaults to "map" if unspecified
+                 "odom_frame": "odom",           # Defaults to "odom" if unspecified
+                 "base_link_frame": "ackmann/base_footprint",    # Defaults to "base_link" if unspecified
+                 "world_frame": "odom",             # Defaults to the value of odom_frame if unspecified
+                 
+                 # Additional stability parameters
+                 "sensor_timeout": 0.2,  # Wait for sensor data
+                 "transform_timeout": 0.2,
+                 "transform_time_offset": 0.1,
 
+                 "odom0": "/vo_odom",
+                 "odom0_config": [True, True, False,    # x, y, z position
+                                  False, False, True,     # roll, pitch, yaw
+                                  True, True, False,     # x, y, z velocity
+                                  False, False, True,     # roll, pitch, yaw rates
+                                  False, False, False], # x, y, z acceleration
+                 "odom0_queue_size": 10,
+                 "odom0_nodelay": False,
+                 "odom0_differential": False,
+                 "odom0_relative": True,
+                 #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
+                 #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+                 
+                 # IMU Configuration  
+                 "imu0": "/imu/data", #"/l515/imu/data",
+                 "imu0_config": [False, False, False,   # x, y, z position
+                                False,  False,  True,    # roll, pitch, yaw
+                                False, False, False,   # x, y, z velocity
+                                False,  False,  True,    # roll, pitch, yaw rates
+                                False,  False,  False],   # x, y, z acceleration
+                 "imu0_queue_size": 10,
+                 "imu0_nodelay": False,
+                 "imu0_differential": False,
+                 "imu0_relative": True,
+                 "imu0_remove_gravitational_acceleration": True,
+                
+                }]
+    )
+
+    # Robot controllers
     ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
@@ -221,10 +314,15 @@ def generate_launch_description():
 
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
-    ld.add_action(realsense_d435i)
     ld.add_action(robot_state_publisher)
     ld.add_action(joint_state_publisher)
-    ld.add_action(ros2_controller_callback)
+    #ld.add_action(ros2_controller_callback)
+    ld.add_action(realsense_d435i)
+    ld.add_action(imu_transform_node)
+    ld.add_action(imu_filter_node)
+    ld.add_action(rgbd_sync)
+    ld.add_action(visual_odom)
+    ld.add_action(ekf_filter_node)
     #ld.add_action(nav2)
     ld.add_action(rviz)
     return ld

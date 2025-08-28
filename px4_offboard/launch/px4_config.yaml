@@ -1,0 +1,70 @@
+# Common configuration for PX4 autopilot
+node:
+  startup_px4_usb_quirk: false
+
+# --- system plugins ---
+
+# sys_status & sys_time connection options
+conn:
+  heartbeat_rate: 1.0    # send heartbeat rate in Hertz
+  timeout: 10.0          # heartbeat timeout in seconds
+  timesync_rate: 10.0    # TIMESYNC rate in Hertz (feature disabled if 0.0)
+  system_time_rate: 1.0  # send system time to FCU rate in Hertz (disabled if 0.0)
+
+# sys_status
+sys:
+  min_voltage: 10.0   # diagnostics min voltage
+  disable_diag: false # disable all sys_status diagnostics, except heartbeat
+
+# sys_time
+time:
+  time_ref_source: "fcu"  # time_reference source
+  timesync_mode: MAVLINK
+  timesync_avg_alpha: 0.6 # timesync averaging factor
+
+# --- mavros plugins (alphabetical order) ---
+
+# vision_pose_estimate
+vision_pose:
+  tf:
+    listen: false           # disable tf listener (use topic subscribers)
+    frame_id: "odom"        # frame_id for VIO pose
+    child_frame_id: "base_link" # child_frame_id for VIO pose
+    rate_limit: 10.0        # rate limit for VIO pose
+
+# vision_speed_estimate
+vision_speed:
+  listen_twist: true    # enable listen to twist topic (for velocity estimates)
+  twist_cov: true       # enable listen to twist with covariance topic
+
+# --- Disable all other plugins ---
+# Disable unnecessary plugins to reduce overhead
+global_position:
+  tf:
+    send: false
+local_position:
+  tf:
+    send: false
+imu:
+  frame_id: "base_link"  # Keep IMU frame_id for reference, but disable publishing
+  linear_acceleration_stdev: 0.0003
+  angular_velocity_stdev: 0.0003490659
+  orientation_stdev: 1.0
+  magnetic_stdev: 0.0
+setpoint_accel:
+  send_force: false
+setpoint_attitude:
+  reverse_thrust: false
+  use_quaternion: false
+  tf:
+    listen: false
+setpoint_raw:
+  thrust_scaling: 1.0
+setpoint_position:
+  tf:
+    listen: false
+setpoint_velocity:
+  mav_frame: LOCAL_NED
+mission:
+  pull_after_gcs: true
+  use_mission_item_int: true

@@ -26,11 +26,11 @@ joint_state_broadcaster:
 
 ackermann_steering_controller:
   ros__parameters:
-    wheelbase: 0.224
-    front_wheel_track: 0.2
-    rear_wheel_track: 0.2
-    front_wheels_radius: 0.035
-    rear_wheels_radius: 0.035
+    wheelbase: 0.174
+    front_wheel_track: 0.174
+    rear_wheel_track: 0.174
+    front_wheels_radius: 0.038
+    rear_wheels_radius: 0.038
     front_steering: true
     reference_timeout: 2.0
     use_stamped_vel: false
