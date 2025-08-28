@@ -1,0 +1,26 @@
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+  <name>imu_transformer</name>
+  <version>0.0.1</version>
+  <description>Node/components to transform sensor_msgs::Imu data from one frame into another.</description>
+  <license>GPL</license>
+  <author email="wtlove876@gmail.com">Tao Wang</author>
+  <maintainer email="wtlove876@gmail.com">Tao Wang</maintainer>
+  
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>message_filters</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_sensor_msgs</depend>
+
+  <test_depend>geometry_msgs</test_depend>
+  <test_depend>tf2_geometry_msgs</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+      <build_type>ament_cmake</build_type>
+  </export>
+</package>

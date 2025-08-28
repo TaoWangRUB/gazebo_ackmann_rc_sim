@@ -44,6 +44,8 @@ def generate_launch_description():
         'robot_description')
     pkg_ros_realsense = get_package_share_directory(
         'realsense2_camera')
+    pkg_ros_px4_offboard = get_package_share_directory(
+        'px4_offboard')
     pkg_turtlebot4_navigation = get_package_share_directory(
         'turtlebot4_navigation')
     pkg_turtlebot4_viz = get_package_share_directory(
@@ -55,6 +57,8 @@ def generate_launch_description():
         [pkg_ros_realsense, 'launch', 'rs_launch.py'])
     rviz_launch = PathJoinSubstitution(
         [pkg_turtlebot4_viz, 'launch', 'view_robot.launch.py'])
+    pkg_offboard_launch = PathJoinSubstitution(
+        [pkg_ros_px4_offboard, 'launch', 'offboard_control.launch.py'])
     localization_launch = PathJoinSubstitution(
         [pkg_turtlebot4_navigation, 'launch', 'localization.launch.py'])
     slam_launch = PathJoinSubstitution(
@@ -251,6 +255,13 @@ def generate_launch_description():
                 }]
     )
 
+    # Px4 offboard control
+    offboard_control = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([pkg_offboard_launch]),
+        launch_arguments=[
+            ('use_sim_time', LaunchConfiguration('use_sim_time')),
+        ]
+    )
     # Robot controllers
     ros2_controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -323,6 +334,7 @@ def generate_launch_description():
     ld.add_action(rgbd_sync)
     ld.add_action(visual_odom)
     ld.add_action(ekf_filter_node)
+    ld.add_action(offboard_control)
     #ld.add_action(nav2)
     ld.add_action(rviz)
     return ld

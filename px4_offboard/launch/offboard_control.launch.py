@@ -83,7 +83,7 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
-        visualizer_node,
+        #visualizer_node,
         #pose_control_dds_node,
         #velocity_control_dds_node,
         rc_control_dds_node,
@@ -91,5 +91,5 @@ def generate_launch_description():
         #pose_control_mavros_node,
         #velocity_control_mavros_node,
         #rc_control_mavros_node,
-        rviz2_node
+        #rviz2_node
     ])
