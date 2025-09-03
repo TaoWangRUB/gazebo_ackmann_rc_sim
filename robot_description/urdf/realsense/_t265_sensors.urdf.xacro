@@ -4,201 +4,120 @@
 
   <xacro:macro name="gazebo_t265" params="parent
                                           name
-                                          
                                           fisheye_width:=848
                                           fisheye_height:=800
+                                          fov:=3.5
                                           fisheye_fps:=30
-
-                                          unite_imu_method:=false
                                           accel_fps:=62.5
                                           gyro_fps:=200
-
                                           odom_fps:=200
                                           ">
 
     <!-- Load parameters to model's main link-->
-    <gazebo reference="${name}_fisheye1_rgb_frame">
-      <self_collide>0</self_collide>
-      <enable_wind>0</enable_wind>
-      <kinematic>0</kinematic>
-      <!-- <gravity>1</gravity> -->
-      <!--<mu>1</mu>-->
-      <mu2>1</mu2>
-      <fdir1>0 0 0</fdir1>
-      <!--<slip1>0</slip1>
-      <slip2>0</slip2>-->
-      <kp>1e+13</kp>
-      <kd>1</kd>
-      <!--<max_vel>0.01</max_vel>
-      <min_depth>0</min_depth>-->
-      <sensor name="${name}fisheye1" type="wideanglecamera">
-        <!-- <origin xyz="0 0 0" rpy="0 ${M_PI/2} 0"/> -->
+    <gazebo reference="${name}_link">
+      <sensor name="${name}_fisheye1" type="camera">
+        <always_on>true</always_on>
         <update_rate>${fisheye_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/fisheye1/image_raw</topic>
         <camera>
-          <horizontal_fov>1.95</horizontal_fov>
+          <optical_frame_id>${name}_fisheye1_optical_frame</optical_frame_id>
+          <horizontal_fov>${fov}</horizontal_fov>
           <image>
             <width>${fisheye_width}</width>
             <height>${fisheye_height}</height>
-            <format>L8</format>
+            <format>R8G8B8</format>
           </image>
           <clip>
-            <near>0.2</near>
-            <far>100</far>
+            <near>0.01</near>
+            <far>100.0</far>
           </clip>
-         <lens>
-            <!-- type element is mandatory -->
-            <type>orthographic</type>
-            <!-- if it is set to `true` your horizontal FOV will remain as defined -->
-            <!-- othervise it depends on lens type and custom function, if there is one -->
-            <scale_to_hfov>true</scale_to_hfov>
-            <!-- clip everything that is outside of this angle -->
-            <!-- eye balled value for these cameras-->
-            <cutoff_angle>2.20</cutoff_angle>
-            <!-- resolution of the cubemap texture, the highter it is - the sharper is your image -->
-            <env_texture_size>1024</env_texture_size>
-          </lens>
-
+        <lens>
+          <intrinsics>
+            <fx>${fisheye_width / (2 * tan(fov/2))}</fx>
+            <fy>${fisheye_width / (2 * tan(fov/2))}</fy>
+            <cx>${fisheye_width / 2}</cx>
+            <cy>${fisheye_height / 2}</cy>
+          </intrinsics>
+          <projection>
+            <p_fx>${fisheye_width / (2 * tan(fov/2))}</p_fx>
+            <p_fy>${fisheye_width / (2 * tan(fov/2))}</p_fy>
+            <p_cx>${fisheye_width / 2}</p_cx>
+            <p_cy>${fisheye_height / 2}</p_cy>
+          </projection>
+        </lens>
         </camera>
-        <plugin name="${name}fisheye1" filename="libgazebo_ros_camera.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>${fisheye_fps}</updateRate>
-          <cameraName>${name}/fisheye1</cameraName>
-          <imageTopicName>image_raw</imageTopicName>
-          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>${name}_fisheye1_optical_frame</frameName>
-          <hackBaseline>0.07</hackBaseline>
-          <distortionK1>-0.00040996368625201285</distortionK1>
-          <distortionK2>0.03653175011277199</distortionK2>
-          <distortionK3>0.0</distortionK3>
-          <distortionP1>-0.034823670983314514</distortionP1>
-          <distortionP2>0.0052825710736215115</distortionP2>
-          <Cx>416.22</Cx>
-          <Cy>402.1</Cy>
-          <CxPrime>416.22</CxPrime>
-        </plugin>
       </sensor>
-    </gazebo>
-    <gazebo reference="${name}_fisheye2_rgb_frame">
-      <self_collide>0</self_collide>
-      <enable_wind>0</enable_wind>
-      <kinematic>0</kinematic>
-      <!-- <gravity>1</gravity> -->
-      <!--<mu>1</mu>-->
-      <mu2>1</mu2>
-      <fdir1>0 0 0</fdir1>
-      <!--<slip1>0</slip1>
-      <slip2>0</slip2>-->
-      <kp>1e+13</kp>
-      <kd>1</kd>
-      <!--<max_vel>0.01</max_vel>
-      <min_depth>0</min_depth>-->
-      <sensor name="${name}fisheye2" type="wideanglecamera">
-        <!-- <origin xyz="0 0 0" rpy="0 ${M_PI/2} 0"/> -->
+      <sensor name="${name}_fisheye2" type="camera">
+        <always_on>true</always_on>
         <update_rate>${fisheye_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/fisheye2/image_raw</topic>
         <camera>
-          <horizontal_fov>2.84</horizontal_fov>
+          <optical_frame_id>${name}_fisheye2_optical_frame</optical_frame_id>
+          <horizontal_fov>${fov}</horizontal_fov>
           <image>
             <width>${fisheye_width}</width>
             <height>${fisheye_height}</height>
-            <format>L8</format>
+            <format>R8G8B8</format>
           </image>
           <clip>
-            <near>0.1</near>
-            <far>100</far>
+            <near>0.01</near>
+            <far>100.0</far>
           </clip>
-         <lens>
-            <!-- type element is mandatory -->
-            <type>orthographic</type>
-            <!-- if it is set to `true` your horizontal FOV will remain as defined -->
-            <!-- othervise it depends on lens type and custom function, if there is one -->
-            <scale_to_hfov>true</scale_to_hfov>
-            <!-- clip everything that is outside of this angle -->
-            <!-- eye balled value for these cameras-->
-            <cutoff_angle>2.20</cutoff_angle>
-            <!-- resolution of the cubemap texture, the highter it is - the sharper is your image -->
-            <env_texture_size>1024</env_texture_size>
-          </lens>
-
+        <lens>
+          <intrinsics>
+            <fx>${fisheye_width / (2 * tan(fov/2))}</fx>
+            <fy>${fisheye_width / (2 * tan(fov/2))}</fy>
+            <cx>${fisheye_width / 2}</cx>
+            <cy>${fisheye_height / 2}</cy>
+          </intrinsics>
+          <projection>
+            <p_fx>${fisheye_width / (2 * tan(fov/2))}</p_fx>
+            <p_fy>${fisheye_width / (2 * tan(fov/2))}</p_fy>
+            <p_cx>${fisheye_width / 2}</p_cx>
+            <p_cy>${fisheye_height / 2}</p_cy>
+          </projection>
+        </lens>
         </camera>
-        <always_on>1</always_on>
-        <plugin name="${name}fisheye2" filename="libgazebo_ros_camera.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>${fisheye_fps}</updateRate>
-          <cameraName>${name}/fisheye2</cameraName>
-          <imageTopicName>image_raw</imageTopicName>
-          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>${name}_fisheye2_optical_frame</frameName>
-          <hackBaseline>0.07</hackBaseline>
-          <distortionK1>-0.00040996368625201285</distortionK1>
-          <distortionK2>0.03653175011277199</distortionK2>
-          <distortionK3>0.0</distortionK3>
-          <distortionP1>-0.034823670983314514</distortionP1>
-          <distortionP2>0.0052825710736215115</distortionP2>
-        </plugin>
       </sensor>
-      <!-- IMU -->
-      <xacro:if value="${unite_imu_method == 'copy' or unite_imu_method == 'linear_interpolation'}">
-        <sensor name="${name}_imu" type="imu">
-          <always_on>true</always_on>
-          <update_rate>${gyro_fps}</update_rate>
-          <topic>/${name}/imu/sample</topic>
-          <plugin name="${name}imu" filename="libgazebo_ros_imu_sensor.so">
-            <topicName>/${name}/imu/sample</topicName>
-            <bodyName>${name}_pose_frame</bodyName>
-            <frameName>${name}_gyro_optical_frame</frameName>
-            <updateRateHZ>${gyro_fps}</updateRateHZ>
-            <gaussianNoise>0.1</gaussianNoise>
-            <xyzOffset>0 0 0</xyzOffset>
-            <rpyOffset>0 0 0</rpyOffset>
-          </plugin>
-        </sensor>
-      </xacro:if>
-      <!-- Accel and gyro -->
-      <xacro:unless value="${unite_imu_method == 'copy' or unite_imu_method == 'linear_interpolation'}">
-        <sensor name="${name}accel" type="imu">
-          <always_on>true</always_on>
-          <update_rate>${accel_fps}</update_rate>
-          <plugin name="${name}_accel_plugin" filename="librealsense_gazebo_accel_sensor.so">
-            <topicName>/${name}/accel/sample</topicName>
-            <bodyName>${name}_pose_frame</bodyName>
-            <updateRateHZ>${accel_fps}</updateRateHZ>
-            <gaussianNoise>0.1</gaussianNoise>
-            <xyzOffset>0 0 0</xyzOffset>
-            <rpyOffset>0 0 0</rpyOffset>
-            <frameName>${name}_accel_optical_frame</frameName>
-            <initialOrientationAsReference>false</initialOrientationAsReference>
-          </plugin>
-          <pose>0 0 0 0 0 0</pose>
-        </sensor>
-        <sensor name="${name}gyro" type="imu">
-          <always_on>true</always_on>
-          <update_rate>${gyro_fps}</update_rate>
-          <topic>/${name}/gyro/sample</topic>
-          <plugin name="${name}_gyro_plugin" filename="librealsense_gazebo_gyro_sensor.so">
-            <topicName>/${name}/gyro/sample</topicName>
-            <bodyName>${name}_pose_frame</bodyName>
-            <updateRateHZ>${gyro_fps}</updateRateHZ>
-            <gaussianNoise>0.1</gaussianNoise>
-            <xyzOffset>0 0 0</xyzOffset>
-            <rpyOffset>0 0 0</rpyOffset>
-            <frameName>${name}_gyro_optical_frame</frameName>
-            <initialOrientationAsReference>false</initialOrientationAsReference>
-          </plugin>
-        </sensor>
-      </xacro:unless>
     </gazebo>
 
+    <!-- IMU -->
+    <gazebo reference="${name}_imu_optical_frame">
+      <sensor name="${name}_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${gyro_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/imu</topic>
+        <ignition_frame_id>${name}_imu_optical_frame</ignition_frame_id>
+        <imu>
+          <angular_velocity>
+            <x>true</x>
+            <y>true</y>
+            <z>true</z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>true</x>
+            <y>true</y>
+            <z>true</z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+    <!-- odom -->
     <gazebo>
       <!-- World odometry plugin (by default, odometry topic is used) -->
-        <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
+      <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
         <dimensions>3</dimensions>
         <odom_frame>odom_frame</odom_frame>
-        <robot_base_frame>$(name)/pose_frame</robot_base_frame>
+        <robot_base_frame>${name}/pose_frame</robot_base_frame>
         <publish_link_pose>true</publish_link_pose>
         <tf_topic>$(arg ns)/tf</tf_topic> 
-        <odom_topic>/$(name)/odom/sample</odom_topic>
+        <odom_topic>/${name}/pose/sample</odom_topic>
         <publish_tf>false</publish_tf>
-        </plugin>
+      </plugin>
     </gazebo>
   </xacro:macro>
 </robot>

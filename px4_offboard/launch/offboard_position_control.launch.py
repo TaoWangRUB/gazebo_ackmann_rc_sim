@@ -57,11 +57,4 @@ def generate_launch_description():
             name='control',
             parameters= [{'radius': 100.0},{'altitude': 5.0},{'omega': 0.01}]
         ),
-        Node(
-            package='rviz2',
-            namespace='',
-            executable='rviz2',
-            name='rviz2',
-            arguments=['-d', [os.path.join(package_dir, 'visualize.rviz')]]
-        )
     ])

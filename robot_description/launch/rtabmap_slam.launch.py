@@ -93,6 +93,7 @@ def generate_launch_description():
     rtabmap_parameters={
         'subscribe_rgbd':True,
         'subscribe_scan':subscribe_scan,
+        'subscribe_odom':True,
         'use_action_for_goal':True,
         'odom_sensor_sync': True,   
         # RTAB-Map's parameters should be strings:
@@ -148,6 +149,7 @@ def generate_launch_description():
             ('imu_out', '/imu/raw_transformed'),
         ]
     )     
+    
     # IMU filter node
     # Filter which fuses angular velocities, accelerations, and 
     # (optionally) magnetic readings from a generic IMU device 
@@ -382,7 +384,7 @@ def generate_launch_description():
     ld.add_action(ekf_filter_node)
     # #ld.add_action(rgbd_to_points)
     # #ld.add_action(obstacle_detection)
-    # ld.add_action(slam)
-    # ld.add_action(localization)
+    ld.add_action(slam)
+    ld.add_action(localization)
     ld.add_action(rtabmap_viz)
     return ld

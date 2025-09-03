@@ -126,7 +126,8 @@
     </joint>
     <link name="${name}_imu_optical_frame"/>
     <!-- Realsense Gazebo Plugin -->
-    <!-- <xacro:gazebo_t265 parent="${parent}" camera_name="${name}" topics_ns="${name}"> -->
+    <xacro:gazebo_t265 parent="${parent}" name="${name}">
+    </xacro:gazebo_t265>
   </xacro:macro>
 
 </robot>

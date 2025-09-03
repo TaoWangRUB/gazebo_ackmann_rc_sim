@@ -82,20 +82,8 @@ def generate_launch_description():
         ],
         condition=UnlessCondition(LaunchConfiguration('sim'))
     )
-
-    launch_arguments=[('rgb_image_topic', '/ackmann/depth_camera/image'),
-                      ('rgb_camera_info_topic', '/ackmann/depth_camera/camera_info'),
-                      ('depth_image_topic', '/ackmann/depth_camera/depth_image'),
-                      ('depth_camera_info_topic', '/ackmann/depth_camera/camera_info'),
-                      ('imu_raw_topic', '/l515/imu/raw')
-                     ] if LaunchConfiguration('sim') else [
-                        ('rgb_image_topic', '/d435i/color/image_raw'),
-                        ('rgb_camera_info_topic', '/d435i/color/camera_info'),
-                        ('depth_image_topic', '/d435i/depth/image_rect_raw'),
-                        ('depth_camera_info_topic', '/d435i/depth/camera_info'),
-                        ('imu_raw_topic', '/d435i/imu/raw')
-                     ]
     
+    # RTAB-Map
     rtabmap = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([rtabmap_launch]),
         launch_arguments=[

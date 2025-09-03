@@ -50,11 +50,4 @@ def generate_launch_description():
             executable='visualizer',
             name='visualizer'
         ),
-        Node(
-            package='rviz2',
-            namespace='',
-            executable='rviz2',
-            name='rviz2',
-            arguments=['-d', [os.path.join(package_dir, 'visualize.rviz')]]
-        )
     ])

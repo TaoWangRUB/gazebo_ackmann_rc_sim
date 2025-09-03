@@ -15,6 +15,9 @@
   <xacro:property name="d435i_x_offset" value="${10*cm2m}"/>
   <xacro:property name="d435i_z_offset" value="${17*cm2m}"/>
 
+  <xacro:property name="t265_x_offset" value="${10*cm2m}"/>
+  <xacro:property name="t265_z_offset" value="${21*cm2m}"/>
+
   <xacro:property name="l515_x_offset" value="${10*cm2m}"/>
   <xacro:property name="l515_z_offset" value="${50*cm2m}"/>
 
@@ -318,6 +321,7 @@
   <xacro:arg name="use_mesh" default="true" />
   <xacro:property name="d435_name" value="d435i" />
   <xacro:property name="l515_name" value="l515" />
+  <xacro:property name="t265_name" value="t265" />
 
   <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i.urdf.xacro"/>
   <xacro:sensor_d435i name="${d435_name}" parent="$(arg ns)/base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
@@ -329,45 +333,10 @@
     <origin xyz="${l515_x_offset} 0 ${l515_z_offset}" rpy="0 0 0"/>
   </xacro:sensor_l515>
 
-  <!--   
-  <joint name="${l515_name}_joint" type="fixed">
-    <origin xyz="0.1 0 0.07" rpy="0 0 0"/>
-    <parent link="$(arg ns)/base_link"/>
-    <child link="${l515_name}_link"/>
-  </joint>
-  <link name="${l515_name}_link">
-    <visual>
-     <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-       <box size="0.012 0.132 0.020"/>
-      </geometry>
-    </visual>
-    <collision>
-      <origin xyz="0.003 0.065 0.007" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.012 0.132 0.020"/>
-      </geometry>
-    </collision>
-  </link>
-
-  <joint name="${l515_name}_depth_joint" type="fixed">
-    <origin xyz="0.005 0.028 0.013" rpy="0 0 0"/>
-    <parent link="${l515_name}_link"/>
-    <child link="${l515_name}_depth_frame"/>
-  </joint>
-  <link name="${l515_name}_depth_frame">
-    <xacro:inertial_dummy/>
-  </link>
-
-  <joint name="${l515_name}_depth_optical_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
-    <parent link="${l515_name}_depth_frame"/>
-    <child link="${l515_name}_depth_optical_frame"/>
-  </joint>
-
-  <link name="${l515_name}_depth_optical_frame">
-    <xacro:inertial_dummy/>
-  </link> -->
+  <xacro:include filename="$(find robot_description)/urdf/realsense/_t265.urdf.xacro"/>
+  <xacro:sensor_t265 name="${t265_name}" parent="$(arg ns)/base_link">
+    <origin xyz="${t265_x_offset} 0 ${t265_z_offset}" rpy="0.0 0.0 0.0"/>
+  </xacro:sensor_t265>
 
   <!-- Depth camera sensor -->
   <gazebo reference="${l515_name}_depth_frame">

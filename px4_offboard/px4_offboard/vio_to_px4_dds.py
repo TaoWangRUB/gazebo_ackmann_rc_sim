@@ -62,9 +62,9 @@ class VIOPublisher(Node):
         
         # set position frame
         self.px4_odom.pose_frame = VehicleOdometry.POSE_FRAME_NED  # PX4 uses NED frame
-        # Convert position (ENU -> NED)
-        self.px4_odom.position[0] = -msg.pose.pose.position.x
-        self.px4_odom.position[1] = -msg.pose.pose.position.y
+        # Convert position (ENU -> NED): [x_n, y_e, z_d] = [y_e, x_e, -z_u]
+        self.px4_odom.position[0] = msg.pose.pose.position.y
+        self.px4_odom.position[1] = msg.pose.pose.position.x
         self.px4_odom.position[2] = -msg.pose.pose.position.z
         # self.get_logger().info('x = %f, y = %f, z = %f' %(px4_odom.position[0], px4_odom.position[1], px4_odom.position[2]))
         
@@ -73,19 +73,24 @@ class VIOPublisher(Node):
         self.px4_odom.position_variance[1] = 0.01  # Variance in Y position (m^2)
         self.px4_odom.position_variance[2] = 0.01  # Variance in Z position (m^2)
         
-        # Convert orientation (ENU -> NED)
-        q_blu = [-msg.pose.pose.orientation.x,
-                 -msg.pose.pose.orientation.y,
-                 -msg.pose.pose.orientation.z,
-                  msg.pose.pose.orientation.w]
-	
-        # Step 1: 180° X-rotation (BLU -> FRU)
-        q_rot_x = quaternion_from_euler(np.pi, 0, 0)  # [1, 0, 0, 0]
-        
-        q_frd = quaternion_multiply(q_rot_x, q_blu)
+        # Convert orientation (ENU/FLU -> NED/FRD)
+        qx = msg.pose.pose.orientation.x
+        qy = msg.pose.pose.orientation.y
+        qz = msg.pose.pose.orientation.z
+        qw = msg.pose.pose.orientation.w
+
+        # Static rotations as quaternions in [x,y,z,w] order (tf_transformations convention)
+        # ENU -> NED: 180° about axis (1,1,0)/sqrt(2) => [1/sqrt(2), 1/sqrt(2), 0, 0]
+        q_enu_to_ned = [np.sqrt(0.5), np.sqrt(0.5), 0.0, 0.0]
+        # FLU -> FRD: 180° about X => [1, 0, 0, 0]
+        q_flu_to_frd = [1.0, 0.0, 0.0, 0.0]
+
+        q_enu = [qx, qy, qz, qw]
+        q_tmp = quaternion_multiply(q_enu_to_ned, q_enu)
+        q_ned_frd = quaternion_multiply(q_tmp, q_flu_to_frd)
 
         # Reorder to PX4's [w,x,y,z] format
-        self.px4_odom.q = [q_blu[3], q_blu[0], q_blu[1], q_blu[2]]
+        self.px4_odom.q = [q_ned_frd[3], q_ned_frd[0], q_ned_frd[1], q_ned_frd[2]]
         #self.get_logger().info('x = %f, y = %f, z = %f w = %f' %(q_blu[0], q_blu[1], q_blu[2], q_blu[3]))
         #self.get_logger().warn('x = %f, y = %f, z = %f w = %f' %(q_frd[0], q_frd[1], q_frd[2], q_frd[3]))
         
@@ -94,12 +99,9 @@ class VIOPublisher(Node):
         self.px4_odom.orientation_variance[1] = 0.01  # Variance in pitch (rad^2)
         self.px4_odom.orientation_variance[2] = 0.01  # Variance in yaw (rad^2)
         
-        # Convert velocity (ENU -> NED)
-        # set position frame
-        self.px4_odom.pose_frame = VehicleOdometry.VELOCITY_FRAME_NED  # PX4 uses NED frame
-        
-        self.px4_odom.velocity[0] = -msg.twist.twist.linear.x
-        self.px4_odom.velocity[1] = -msg.twist.twist.linear.y
+        # Convert velocity (ENU -> NED): [x, y, z] = [y, x, -z]
+        self.px4_odom.velocity[0] = msg.twist.twist.linear.y
+        self.px4_odom.velocity[1] = msg.twist.twist.linear.x
         self.px4_odom.velocity[2] = -msg.twist.twist.linear.z
         
         # Set velocity frame
@@ -109,9 +111,9 @@ class VIOPublisher(Node):
         self.px4_odom.velocity_variance[1] = 0.01  # Variance in Y velocity (m^2/s^2)
         self.px4_odom.velocity_variance[2] = 0.01  # Variance in Z velocity (m^2/s^2)
         
-        # Convert angular velocity (ENU -> NED)
-        self.px4_odom.angular_velocity[0] = -msg.twist.twist.angular.x
-        self.px4_odom.angular_velocity[1] = -msg.twist.twist.angular.y
+        # Convert angular velocity (ENU -> NED): [x, y, z] = [y, x, -z]
+        self.px4_odom.angular_velocity[0] = msg.twist.twist.angular.y
+        self.px4_odom.angular_velocity[1] = msg.twist.twist.angular.x
         self.px4_odom.angular_velocity[2] = -msg.twist.twist.angular.z
         
         # set signal quality

@@ -19,7 +19,7 @@ ARGUMENTS = [
                           choices=['true', 'false'], description='Start rviz.'),
     DeclareLaunchArgument('world', default_value='warehouse',
                           description='Ignition World'),
-    DeclareLaunchArgument('use_sim_time', default_value='true',
+    DeclareLaunchArgument('use_sim_time', default_value='false',
                           choices=['true', 'false'],
                           description='use_sim_time'),
     DeclareLaunchArgument('localization', default_value='false',
@@ -52,6 +52,8 @@ def generate_launch_description():
         'turtlebot4_viz')
     pkg_controller = get_package_share_directory(
         'robot_description')
+    pkg_robot_description = get_package_share_directory(
+        'robot_description')
     
     realsense_launch = PathJoinSubstitution(
         [pkg_ros_realsense, 'launch', 'rs_launch.py'])
@@ -59,52 +61,17 @@ def generate_launch_description():
         [pkg_turtlebot4_viz, 'launch', 'view_robot.launch.py'])
     pkg_offboard_launch = PathJoinSubstitution(
         [pkg_ros_px4_offboard, 'launch', 'offboard_control.launch.py'])
-    localization_launch = PathJoinSubstitution(
-        [pkg_turtlebot4_navigation, 'launch', 'localization.launch.py'])
-    slam_launch = PathJoinSubstitution(
-        [pkg_turtlebot4_navigation, 'launch', 'slam.launch.py'])
-    nav2_launch = PathJoinSubstitution(
-        [pkg_robot_ignition_bringup, 'launch', 'nav2_bringup.launch.py'])
+    robot_state_launch = PathJoinSubstitution(
+        [pkg_robot_description, 'launch', 'robot_state.launch.py'])
     
     # Robot description
-    pkg_robot_description = get_package_share_directory('robot_description')
-    xacro_file = PathJoinSubstitution([pkg_robot_description,
-                                       'urdf',
-                                       'donkey_sensors.urdf'
-                                       ])
     namespace = '' #LaunchConfiguration('namespace')
-    
-    # Robot state publisher
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        name="robot_state_publisher",
-        output="screen",
-        parameters=[
-            {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            {'robot_description': Command([
-                'xacro', ' ', xacro_file, ' ',
-                'gazebo:=ignition', ' ',
-                'namespace:=', namespace
-                ])},
-        ],
-        remappings=[
-            ('/tf', 'tf'),
-            ('/tf_static', 'tf_static')
-        ]
-    )
 
-    # Joint state publisher
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
-                    ],
-        remappings=[
-            ('/tf', 'tf'),
-            ('/tf_static', 'tf_static')
+    robot_state_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([robot_state_launch]),
+        launch_arguments=[
+            ('rviz', 'false'),
+            ('use_sim_time', LaunchConfiguration('use_sim_time')),
         ]
     )
 
@@ -114,23 +81,32 @@ def generate_launch_description():
             ('camera_namespace', ''),
             ('camera_name', 'd435i'),
             ('publish_tf', 'false'),
+
             ('accel_qos', 'SYSTEM_DEFAULT'),
             ('enable_accel', 'true'),
             ('gyro_qos', 'SYSTEM_DEFAULT'),
             ('enable_gyro', 'true'),
-            ('enable_rgbd', 'true'),
             ('unite_imu_method', LaunchConfiguration('unite_imu_method')),
+            
             ('enable_sync', 'true'),
-
             ('enable_color', 'true'),
             ('enable_depth', 'true'),
-            ('align_depth.enable', 'true'),
             ('enable_rgbd', 'false'),
-            ('rgb_camera.color_profile', '640x480x15'),                              
-            ('depth_module.depth_profile', '640x480x15'),
+            ('align_depth.enable', 'true'),
+            
+            ('rgb_camera.exposure', '200'), # 1000us = 1 ms
+            ('rgb_camera.gain', '128'),         
+            ('rgb_camera.color_profile', '640x480x60'), # 0: 424x240x30, 1: 424x240x60, 2: 640x360x30, 3: 640x360x60, 4: 640x480x30, 5: 640x480x60, 6: 1280x720x30
+            ('rgb_camera.enable_auto_exposure', 'false'),   
+
+            ('depth_module.exposure', '7500'),
+            ('depth_module.gain', '16'),                          
+            ('depth_module.depth_profile', '640x480x60'), # 0: 424x240x30, 1: 424x240x60, 2: 640x360x30, 3: 640x360x60, 4: 640x480x30, 5: 640x480x60, 6: 1280x720x30
+            ('depth_module.enable_auto_exposure', 'false'),
+            
             ('enable_infra1', 'false'),
             ('enable_infra2', 'false'),
-            ('pointcloud.enable', 'true'),
+            ('pointcloud.enable', 'false'),
         ],
         #condition=IfCondition(LaunchConfiguration('use_sim_time'))
     )
@@ -210,7 +186,7 @@ def generate_launch_description():
             name='ekf_filter_node',
             output='screen',
             parameters=[#control_params_file,
-                {"frequency": 30.0,
+                {"frequency": 100.0,
                  "predict_to_current_time": True,
                  "history_length": 5.0, 
                  "use_sim_time": LaunchConfiguration('use_sim_time'),
@@ -244,8 +220,8 @@ def generate_launch_description():
                  "imu0_config": [False, False, False,   # x, y, z position
                                 False,  False,  True,    # roll, pitch, yaw
                                 False, False, False,   # x, y, z velocity
-                                False,  False,  True,    # roll, pitch, yaw rates
-                                False,  False,  False],   # x, y, z acceleration
+                                True,  True,  True,    # roll, pitch, yaw rates
+                                True,  True,  False],   # x, y, z acceleration
                  "imu0_queue_size": 10,
                  "imu0_nodelay": False,
                  "imu0_differential": False,
@@ -254,64 +230,47 @@ def generate_launch_description():
                 
                 }]
     )
+    
+    # SLAM Mode:
+    rtabmap_parameters={
+        'subscribe_rgbd':True,
+        'subscribe_scan':False,
+        'subscribe_odom':True,      # Use odometry
+        'use_action_for_goal':True,
+        'odom_sensor_sync': True,   
+        # RTAB-Map's parameters should be strings:
+        'Mem/NotLinkedNodesKept':'false',
+        'Grid/MaxGroundHeight': '0.1',
+        'Grid/MaxObstacleHeight': '0.8',
+        'Grid/NormalsSegmentation': 'false',
+        #'Grid/RangeMax': '20',
+        'Grid/3D': 'false',
+        'Grid/RayTracing': 'true',
+        
+        'frame_id':'ackmann/base_footprint',
+        'use_sim_time':LaunchConfiguration('use_sim_time'),
+        # RTAB-Map's parameters should be strings:
+        'Reg/Strategy':'1',     # 1: 3D->2D (PnP) for 2D navigation
+        'Reg/Force3DoF':'true', # Force 3 DoF (2D) registration
+        'Mem/NotLinkedNodesKept':'false',
+        'Icp/PointToPlaneMinComplexity':'0.04' # to be more robust to long corridors with low geometry
+    }
 
+    slam = Node(
+        package='rtabmap_slam', executable='rtabmap', output='screen',
+        parameters=[rtabmap_parameters],
+        remappings=remappings + [
+            ('odom', "/odometry/filtered"),     # '/odometry/filtered'
+        ],
+        arguments=['-d'])
+    
     # Px4 offboard control
     offboard_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([pkg_offboard_launch]),
         launch_arguments=[
             ('use_sim_time', LaunchConfiguration('use_sim_time')),
+            ('odom_topic', '/odometry/filtered'),
         ]
-    )
-    # Robot controllers
-    ros2_controller = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_controller, 'launch', 'robot_control.launch.py')),
-        launch_arguments=[
-            ('namespace', namespace),
-        ]
-    ) 
-    ros2_controller_callback = RegisterEventHandler(
-        #event_handler=OnProcessExit(
-        event_handler=OnProcessStart(
-            target_action=robot_state_publisher,
-            #on_exit=[ros2_controller],
-            on_start=[ros2_controller],
-        )
-    )
-
-    # Localization
-    localization = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([localization_launch]),
-        launch_arguments=[
-            ('namespace', namespace),
-            ('use_sim_time', LaunchConfiguration('use_sim_time'))
-        ],
-        condition=IfCondition(LaunchConfiguration('localization'))
-    )
-
-    # SLAM
-    slam = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([slam_launch]),
-        launch_arguments=[
-            ('namespace', namespace),
-            ('use_sim_time', LaunchConfiguration('use_sim_time'))
-        ],
-        condition=IfCondition(LaunchConfiguration('slam'))
-    )
-
-    # Nav2
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([nav2_launch]),
-        launch_arguments=[
-            ('namespace', ''),
-            ('use_sim_time', LaunchConfiguration('use_sim_time')),
-            ('localization', LaunchConfiguration('localization')),
-            ('autostart', 'true'),
-            ('params_file', PathJoinSubstitution(
-                [pkg_robot_description, 'config', 'nav2_params.yaml'])),
-            
-        ],
-        condition=IfCondition(LaunchConfiguration('nav2'))
     )
 
     # Open RViz
@@ -320,21 +279,19 @@ def generate_launch_description():
         launch_arguments=[
             ('namespace', ''),
         ],
-        condition=IfCondition(LaunchConfiguration('rviz')),
+        #condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
-    ld.add_action(robot_state_publisher)
-    ld.add_action(joint_state_publisher)
-    #ld.add_action(ros2_controller_callback)
+    ld.add_action(robot_state_launch)
     ld.add_action(realsense_d435i)
     ld.add_action(imu_transform_node)
     ld.add_action(imu_filter_node)
     ld.add_action(rgbd_sync)
     ld.add_action(visual_odom)
     ld.add_action(ekf_filter_node)
+    ld.add_action(slam)
     ld.add_action(offboard_control)
-    #ld.add_action(nav2)
     ld.add_action(rviz)
     return ld

@@ -2,9 +2,15 @@
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
 from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import LaunchConfiguration
 import os
 
+ARGUMENTS = [
+    DeclareLaunchArgument('odom_topic', default_value='/odom',
+                          description='input odometry topic'),
+]
 
 def generate_launch_description():
     package_dir = get_package_share_directory('px4_offboard')
@@ -47,7 +53,10 @@ def generate_launch_description():
         namespace='px4_offboard',
         executable='vio_to_px4',
         name='vio_to_dds',
-        parameters= []
+        parameters= [],
+        remappings={
+            ('/odom', LaunchConfiguration('odom_topic')),
+        }
     )
     
     velocity_control_mavros_node = Node(
@@ -73,23 +82,16 @@ def generate_launch_description():
         name='mavros_offboard_controller_3',
         parameters= []
     )
+
+    # Create launch description and add actions
+    ld = LaunchDescription(ARGUMENTS)
+    #ld.add_action(visualizer_node),
+    #ld.add_action(pose_control_dds_node),
+    #ld.add_action(velocity_control_dds_node),
+    ld.add_action(rc_control_dds_node),
+    ld.add_action(vio_to_px4_dds_node),
+    #ld.add_action(pose_control_mavros_node),
+    #ld.add_action(velocity_control_mavros_node),
+    #ld.add_action(rc_control_mavros_node),
     
-    rviz2_node = Node(
-        package='rviz2',
-        namespace='',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', [os.path.join(package_dir, 'visualize.rviz')]]
-    )
-    
-    return LaunchDescription([
-        #visualizer_node,
-        #pose_control_dds_node,
-        #velocity_control_dds_node,
-        rc_control_dds_node,
-        vio_to_px4_dds_node,
-        #pose_control_mavros_node,
-        #velocity_control_mavros_node,
-        #rc_control_mavros_node,
-        #rviz2_node
-    ])
+    return ld
