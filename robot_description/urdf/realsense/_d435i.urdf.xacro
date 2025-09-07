@@ -10,12 +10,16 @@ aluminum peripherial evaluation case.
 <robot name="sensor_d435i" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
   <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i_imu_modules.urdf.xacro"/>
+  <xacro:include filename="$(find robot_description)/urdf/realsense/_d435i_sensors.urdf.xacro"/>
 
-  <xacro:macro name="sensor_d435i" params="parent *origin name:=camera use_nominal_extrinsics:=false">
+  <xacro:macro name="sensor_d435i" params="parent *origin name:=camera use_nominal_extrinsics:=false add_plug:=false use_mesh:=true add_sensors:=true">
     <xacro:sensor_d435 parent="${parent}" name="${name}" use_nominal_extrinsics="${use_nominal_extrinsics}">
       <xacro:insert_block name="origin" />
     </xacro:sensor_d435>
     <xacro:d435i_imu_modules name="${name}" use_nominal_extrinsics="${use_nominal_extrinsics}"/>
+    <xacro:if value="${add_sensors}">
+      <xacro:gazebo_d435i parent="${parent}" name="${name}" width="640" height="480" fov="1.39626" image_fps="30" accel_fps="62.5" gyro_fps="200"/>
+    </xacro:if>
   </xacro:macro>
 </robot>
 

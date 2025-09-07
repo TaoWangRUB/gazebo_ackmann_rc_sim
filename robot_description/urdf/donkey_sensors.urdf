@@ -339,12 +339,10 @@
   </xacro:sensor_t265>
 
   <!-- Depth camera sensor -->
-  <gazebo reference="${l515_name}_depth_frame">
+  <!-- <gazebo reference="${l515_name}_depth_frame">
     <sensor name="rgbd_camera" type="rgbd_camera">
-      <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
-      <!-- <gz_frame_id>${l515_name}_depth_optical_frame</gz_frame_id> -->
       <camera name="${l515_name}">
-        <horizontal_fov>1.39626</horizontal_fov>  <!--1.047-->
+        <horizontal_fov>1.39626</horizontal_fov>
         <image>
           <width>480</width>
           <height>360</height>
@@ -373,19 +371,9 @@
       <update_rate>30</update_rate>
       <visualize>true</visualize>
       <topic>/${l515_name}</topic>
-      <!-- <plugin name="camera_info_publisher" filename="libcamera_info_plugin.so">
-        <topic>/$(arg ns)/${l515_name}/camera_info</topic>
-        <frame_id>${l515_name}_depth_optical_frame</frame_id>
-        <publish_rate>30.0</publish_rate>
-        <width>480</width>
-        <height>360</height>
-        <horizontal_fov>1.39626</horizontal_fov>
-        <near_clip>0.3</near_clip>
-        <far_clip>20.0</far_clip>
-      </plugin> -->
     </sensor>
   </gazebo>
-  <!-- IMU sensor -->
+  
   <gazebo reference="${l515_name}_imu_optical_frame">
     <sensor name="imu_sensor" type="imu">
       <always_on>true</always_on>
@@ -407,7 +395,7 @@
       </imu>
       
     </sensor>
-  </gazebo>
+  </gazebo> -->
 
 
   <xacro:rplidar name="rplidar" parent_link="$(arg ns)/base_link" gazebo="ignition">

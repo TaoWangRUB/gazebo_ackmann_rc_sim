@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="gazebo_d435i" params="parent
+                                          name:=d435i
+                                          width:=480
+                                          height:=360
+                                          fov:=1.4
+                                          image_fps:=30
+                                          accel_fps:=62.5
+                                          gyro_fps:=200
+                                          ">
+
+    <!-- Load parameters to model's main link-->
+    <gazebo reference="${name}_link">
+      <sensor name="${name}_infra1" type="camera">
+        <always_on>true</always_on>
+        <update_rate>${image_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/infra1/image_raw</topic>
+        <camera>
+          <optical_frame_id>${name}_infra1_optical_frame</optical_frame_id>
+          <horizontal_fov>${fov}</horizontal_fov>
+          <image>
+            <width>${width}</width>
+            <height>${height}</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.01</near>
+            <far>100.0</far>
+          </clip>
+        <lens>
+          <type>orthographic</type>
+          <scale_to_hfov>true</scale_to_hfov>
+          <cutoff_angle>${fov/2}</cutoff_angle>  
+          <env_texture_size>1024</env_texture_size>
+        </lens>
+        </camera>
+      </sensor>
+      <sensor name="${name}_infra2" type="camera">
+        <always_on>true</always_on>
+        <update_rate>${image_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/infra2/image_raw</topic>
+        <camera>
+          <optical_frame_id>${name}_infra2_optical_frame</optical_frame_id>
+          <horizontal_fov>${fov}</horizontal_fov>
+          <image>
+            <width>${width}</width>
+            <height>${height}</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.01</near>
+            <far>100.0</far>
+          </clip>
+        <lens>
+          <type>equisolid_angle</type>
+          <scale_to_hfov>true</scale_to_hfov>
+          <cutoff_angle>${fov/2}</cutoff_angle>
+          <env_texture_size>1024</env_texture_size>
+        </lens>
+        </camera>
+      </sensor>
+      <sensor name="${name}_rgbd_camera" type="rgbd_camera">
+        <always_on>1</always_on>
+        <update_rate>${image_fps}</update_rate>
+        <visualize>true</visualize>
+        <topic>/${name}</topic>
+        <camera name="${name}">
+          <horizontal_fov>${fov}</horizontal_fov>
+          <image>
+            <width>${width}</width>
+            <height>${height}</height>
+          </image>
+          <clip>
+            <near>0.3</near>
+            <far>20</far>
+          </clip>
+          <lens>
+            <type>stereographic</type>
+            <scale_to_hfov>true</scale_to_hfov>
+            <cutoff_angle>${fov/2}</cutoff_angle>  
+            <env_texture_size>1024</env_texture_size>
+          </lens>
+          <optical_frame_id>${name}_depth_optical_frame</optical_frame_id>
+        </camera>
+      </sensor>
+    </gazebo>
+
+    <!-- IMU -->
+    <gazebo reference="${name}_imu_optical_frame">
+      <sensor name="${name}_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${gyro_fps}</update_rate>
+        <visualize>false</visualize>
+        <topic>/${name}/imu</topic>
+        <ignition_frame_id>${name}_imu_optical_frame</ignition_frame_id>
+        <imu>
+          <angular_velocity>
+            <x>true</x>
+            <y>true</y>
+            <z>true</z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>true</x>
+            <y>true</y>
+            <z>true</z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+    
+  </xacro:macro>
+</robot>

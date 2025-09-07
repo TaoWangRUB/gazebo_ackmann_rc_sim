@@ -158,6 +158,11 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[             # ign topic -t <topic_name> --info
+            '/d435i/camera_info' + '@sensor_msgs/msg/CameraInfo' + '[ignition.msgs.CameraInfo',
+            #'/d435i/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
+            '/d435i/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/d435i/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/d435i/imu' + '@sensor_msgs/msg/Imu' + '[ignition.msgs.IMU',
             '/l515/camera_info' + '@sensor_msgs/msg/CameraInfo' + '[ignition.msgs.CameraInfo',
             '/l515/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
             '/l515/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
@@ -230,6 +235,38 @@ def generate_launch_description():
             '1.5707', '-1.5707', '0',
             'l515_depth_optical_frame',
             [robot_name, '/ackmann/base_footprint/rgbd_camera']
+        ],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+        ]
+    )
+    t265_tf_pub1 = Node(
+        name='camera_stf',
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        output='screen',
+        arguments=[
+            '0', '0', '0',
+            '1.5707', '-1.5707', '0',
+            't265_fisheye1_optical_frame',
+            [robot_name, '/ackmann/base_footprint/fisheye1']
+        ],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+        ]
+    )
+    t265_tf_pub2 = Node(
+        name='camera_stf',
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        output='screen',
+        arguments=[
+            '0', '0', '0',
+            '1.5707', '-1.5707', '0',
+            't265_fisheye2_optical_frame',
+            [robot_name, '/ackmann/base_footprint/fisheye2']
         ],
         remappings=[
             ('/tf', 'tf'),
@@ -335,6 +372,8 @@ def generate_launch_description():
     ld.add_action(robot_state_publisher)
     #ld.add_action(joint_state_publisher)
     ld.add_action(tf_pub)
+    ld.add_action(t265_tf_pub1)
+    ld.add_action(t265_tf_pub2)
     ld.add_action(topic_bridge)
     ld.add_action(gz_spawn_entity)
     ld.add_action(scan_clipper_node)

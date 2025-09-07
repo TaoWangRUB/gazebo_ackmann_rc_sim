@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="gazebo_l515" params="parent
+                                          name:=l515
+                                          width:=480
+                                          height:=360
+                                          fov:=1.4
+                                          image_fps:=30
+                                          accel_fps:=62.5
+                                          gyro_fps:=200
+                                          ">
+
+    
+    <!-- Depth camera sensor -->
+    <gazebo reference="${name}_depth_frame">
+      <sensor name="rgbd_camera" type="rgbd_camera">
+        <!-- <pose>0 0 0.0 ${-PI/2} 0 ${PI/2}</pose> -->
+        <!-- <gz_frame_id>${name}_depth_optical_frame</gz_frame_id> -->
+        <always_on>1</always_on>
+        <update_rate>${image_fps}</update_rate>
+        <visualize>true</visualize>
+        <topic>/${name}</topic>
+        <camera name="${name}">
+          <horizontal_fov>${fov}</horizontal_fov>  <!--1.047-->
+          <image>
+            <width>${width}</width>
+            <height>${height}</height>
+          </image>
+          <clip>
+            <near>0.3</near>
+            <far>20</far>
+          </clip>
+          <lens>
+            <type>stereographic</type>
+            <scale_to_hfov>true</scale_to_hfov>
+            <cutoff_angle>${fov/2}</cutoff_angle>  <!-- 85° cutoff -->
+            <env_texture_size>1024</env_texture_size>
+          </lens>
+          <optical_frame_id>${name}_depth_optical_frame</optical_frame_id>
+        </camera>
+      </sensor>
+    </gazebo>
+
+    <!-- IMU sensor -->
+    <gazebo reference="${name}_imu_optical_frame">
+      <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>${gyro_fps}</update_rate>
+      <visualize>false</visualize>
+      <topic>/${name}/imu/raw</topic>
+      <ignition_frame_id>${name}_imu_optical_frame</ignition_frame_id>
+      <imu>
+          <angular_velocity>
+          <x>true</x>
+          <y>true</y>
+          <z>true</z>
+          </angular_velocity>
+          <linear_acceleration>
+          <x>true</x>
+          <y>true</y>
+          <z>true</z>
+          </linear_acceleration>
+      </imu>
+      
+      </sensor>
+    </gazebo>
+    
+  </xacro:macro>
+</robot>
