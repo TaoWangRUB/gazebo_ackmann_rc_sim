@@ -43,7 +43,7 @@ def generate_launch_description():
     pkg_robot_ignition_bringup = get_package_share_directory(
         'robot_description')
     pkg_ros_realsense = get_package_share_directory(
-        'realsense2_camera')
+        'robot_description')
     pkg_ros_px4_offboard = get_package_share_directory(
         'px4_offboard')
     pkg_turtlebot4_navigation = get_package_share_directory(
@@ -56,7 +56,7 @@ def generate_launch_description():
         'robot_description')
     
     realsense_launch = PathJoinSubstitution(
-        [pkg_ros_realsense, 'launch', 'rs_launch.py'])
+        [pkg_ros_realsense, 'launch', 'rs.launch.py'])
     rviz_launch = PathJoinSubstitution(
         [pkg_turtlebot4_viz, 'launch', 'view_robot.launch.py'])
     pkg_offboard_launch = PathJoinSubstitution(
@@ -119,6 +119,29 @@ def generate_launch_description():
         ('depth/image', '/d435i/depth/image_rect_raw'),
         ('depth/camera_info', '/d435i/depth/camera_info'),
     ]
+
+    # Camera launch
+    realsense_t265 = IncludeLaunchDescription(realsense_launch,
+        launch_arguments=[
+            ('serial_no', ''),
+            ('camera_namespace', 't265'),
+            ('camera_name', 't265'),
+            ('device_type', 't265'),
+            ('publish_tf', 'false'),
+
+            ('enable_sync', 'true'),
+            ('accel_qos', 'SYSTEM_DEFAULT'),
+            ('enable_accel', 'true'),
+            ('gyro_qos', 'SYSTEM_DEFAULT'),
+            ('enable_gyro', 'true'),
+            ('unite_imu_method', LaunchConfiguration('unite_imu_method')),
+            
+            ('enable_infra1', 'false'),
+            ('enable_infra2', 'false'),
+            ('pointcloud.enable', 'false'),
+        ],
+        #condition=IfCondition(LaunchConfiguration('use_sim_time'))
+    )
 
     # Nodes to launch
     rgbd_sync = Node(
@@ -187,8 +210,8 @@ def generate_launch_description():
             output='screen',
             parameters=[#control_params_file,
                 {"frequency": 100.0,
-                 "predict_to_current_time": True,
-                 "history_length": 5.0, 
+                 "predict_to_current_time": False,
+                 "history_length": 0.1, 
                  "use_sim_time": LaunchConfiguration('use_sim_time'),
                  "two_d_mode": True,  # Often helpful for ground robots
                  "publish_tf": True,
@@ -201,6 +224,7 @@ def generate_launch_description():
                  "sensor_timeout": 0.2,  # Wait for sensor data
                  "transform_timeout": 0.2,
                  "transform_time_offset": 0.1,
+                 "smooth_lagged_data": False,
 
                  "odom0": "/vo_odom",
                  "odom0_config": [True, True, False,    # x, y, z position
@@ -214,6 +238,18 @@ def generate_launch_description():
                  "odom0_relative": True,
                  #"odom0_pose_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Lower noise for odometry
                  #"odom0_twist_noise": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+
+                #  "odom1": "/t265/pose/sample_throttle",  # Use T265 pose for better stability
+                #  "odom1_config": [True, True, False,    # x, y, z position
+                #                   False, False, True,     # roll, pitch, yaw
+                #                   True, True, False,     # x, y, z velocity
+                #                   False, False, True,     # roll, pitch, yaw rates
+                #                   False, False, False], # x, y, z acceleration
+                #  "odom1_pose_use_child_frame": True,
+                #  "odom1_queue_size": 100,
+                #  "odom1_nodelay": False,
+                #  "odom1_differential": False,
+                #  "odom1_relative": True,
                  
                  # IMU Configuration  
                  "imu0": "/imu/data", #"/l515/imu/data",
@@ -286,6 +322,7 @@ def generate_launch_description():
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(robot_state_launch)
     ld.add_action(realsense_d435i)
+    #ld.add_action(realsense_t265)
     ld.add_action(imu_transform_node)
     ld.add_action(imu_filter_node)
     ld.add_action(rgbd_sync)

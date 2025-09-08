@@ -148,18 +148,18 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[             # ign topic -t <topic_name> --info
-            '/ackmann/depth_camera/camera_info' + '@sensor_msgs/msg/CameraInfo' + '[ignition.msgs.CameraInfo',
-            '/ackmann/depth_camera/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
-            '/ackmann/depth_camera/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
-            '/ackmann/depth_camera/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
-            '/ackmann/odom' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
-            '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
-            '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
+            '/l515/camera_info' + '@sensor_msgs/msg/CameraInfo' + '[ignition.msgs.CameraInfo',
+            '/l515/points' + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked',
+            '/l515/depth_image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/l515/image' + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image',
+            '/l515/imu/raw' + '@sensor_msgs/msg/Imu' + '[ignition.msgs.IMU',
             #'/ackmann/joint_state' + '@sensor_msgs/msg/JointState' + '[ignition.msgs.Model',
             '/ackmann/cmd_vel' + '@geometry_msgs/msg/Twist' + ']ignition.msgs.Twist',
             '/rplidar/scan' + '@sensor_msgs/msg/LaserScan' + '[ignition.msgs.LaserScan',
-            '/l515/imu/raw' + '@sensor_msgs/msg/Imu' + '[ignition.msgs.IMU',
-            
+            '/t265/pose/sample' + '@nav_msgs/msg/Odometry' + '[ignition.msgs.Odometry',
+            '/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
+            '/model/ackmann/tf' + '@tf2_msgs/msg/TFMessage' + '[ignition.msgs.Pose_V',
+
         ],
         parameters=[{
             'use_sim_time': LaunchConfiguration('use_sim_time')
@@ -242,10 +242,11 @@ def generate_launch_description():
 
     remappings=[
           ('imu', '/imu/data'),#'/l515/imu/raw' '/imu/data'
-          ('rgb/image', '/ackmann/depth_camera/image'),
-          ('rgb/camera_info', '/ackmann/depth_camera/camera_info'),
-          ('depth/image', '/ackmann/depth_camera/depth_image'),
-          ('depth/camera_info', '/ackmann/depth_camera/camera_info')]
+          ('odom', '/vo_odom'),
+          ('rgb/image', '/l515/image'),
+          ('rgb/camera_info', '/l515/camera_info'),
+          ('depth/image', '/l515/depth_image'),
+          ('depth/camera_info', '/l515/camera_info')]
     
     # Nodes to launch
     rgbd_sync = Node(
@@ -289,16 +290,17 @@ def generate_launch_description():
                  #"odom0_pose_noise": [0.5, 0.5, 0.0, 0.0, 0.0, 0.2],   # Higher position noise
                  #"odom0_twist_noise": [0.3, 0.3, 0.0, 0.0, 0.0, 0.15], # Higher velocity noise
                  # Wheel encoder odometry (new)
-                 "odom1": "/ackmann/odom",                 # ✅ Wheel encoder topic
+                 "odom1": "/t265/pose/sample",            # ✅ Wheel encoder topic
                  "odom1_config": [True, True, False,      # x, y, z (same as odom0)
-                                False, False, True,     # roll, pitch, yaw
-                                True, True, False,      # x_vel, y_vel, z_vel
-                                False, False, True,     # roll_vel, pitch_vel, yaw_vel
-                                False, False, False],   # accelerations
+                                  False, False, True,     # roll, pitch, yaw
+                                  True, True, False,      # x_vel, y_vel, z_vel
+                                  False, False, True,     # roll_vel, pitch_vel, yaw_vel
+                                  False, False, False],   # accelerations
                  "odom1_queue_size": 10,
                  "odom1_nodelay": False,
                  "odom1_differential": True,
                  "odom1_relative": True,
+                 "odom1_pose_use_child_frame": True,
                  # Lower noise for wheel encoders (more trust)
                  #"odom1_pose_noise": [0.1, 0.1, 0.0, 0.0, 0.0, 0.05],  # Lower position noise  
                  #"odom1_twist_noise": [0.05, 0.05, 0.0, 0.0, 0.0, 0.02], # Lower velocity noise

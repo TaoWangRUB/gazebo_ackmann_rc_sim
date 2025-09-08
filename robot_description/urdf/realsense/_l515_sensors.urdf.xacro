@@ -33,10 +33,31 @@
             <far>20</far>
           </clip>
           <lens>
-            <type>stereographic</type>
+            <type>pinhole</type>
             <scale_to_hfov>true</scale_to_hfov>
-            <cutoff_angle>${fov/2}</cutoff_angle>  <!-- 85° cutoff -->
+            <cutoff_angle>${fov/2}</cutoff_angle> 
             <env_texture_size>1024</env_texture_size>
+            <intrinsics>
+              <fx>${width / (2 * tan(fov/2))}</fx>
+              <fy>${width / (2 * tan(fov/2))}</fy>
+              <cx>${width / 2}</cx>
+              <cy>${height / 2}</cy>
+            </intrinsics>
+            <projection>
+              <p_fx>${width / (2 * tan(fov/2))}</p_fx>
+              <p_fy>${width / (2 * tan(fov/2))}</p_fy>
+              <p_cx>${width / 2}</p_cx>
+              <p_cy>${height / 2}</p_cy>
+            </projection>
+            <!-- <distortion>
+              <k1>-0.15</k1>
+              <k2>0.041209</k2>
+              <k3>-0.037267</k3>
+              <k4>0.007446</k4>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>0.5 0.5</center>
+            </distortion> -->
           </lens>
           <optical_frame_id>${name}_depth_optical_frame</optical_frame_id>
         </camera>
